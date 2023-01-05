@@ -22,7 +22,19 @@ SOFTWARE.
 
 #include "disassembler.h"
 #include "cfg.h"
+#include <Windows.h>
+#include <debugapi.h>
 
+void DbgPrint(char* FormatStr, ...)
+{
+	char dbgout[1000];
+	va_list vaList;
+
+	va_start(vaList, FormatStr);
+	sprintf(dbgout, FormatStr, vaList);
+	OutputDebugStringA(dbgout);
+	va_end(vaList);
+}
 
 #if CS_API_MAJOR < 4
 #error Unsupported capstone version (capstone engine v4 is required)!
