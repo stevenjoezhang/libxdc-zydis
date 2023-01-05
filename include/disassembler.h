@@ -24,14 +24,9 @@ SOFTWARE.
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <unistd.h>
-#include <sys/time.h>
 #include <inttypes.h>
 #include <capstone/capstone.h>
 #include <capstone/x86.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include "tnt_cache.h"
 #include "khash.h"
 #include "trace_cache.h"

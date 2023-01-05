@@ -20,8 +20,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Note: 
-This Intel PT software decoder is partially inspired and based on Andi 
+Note:
+This Intel PT software decoder is partially inspired and based on Andi
 Kleen's fastdecode.c (simple-pt). m
 See: https://github.com/andikleen/simple-pt/blob/master/fastdecode.c
 
@@ -138,6 +138,20 @@ See: https://github.com/andikleen/simple-pt/blob/master/fastdecode.c
 static decoder_state_machine_t* decoder_statemachine_new(void);
 static void decoder_statemachine_reset(decoder_state_machine_t* self);
 
+static void* memmem(const void* haystack, size_t haystacklen, const void* needle, size_t needlelen) {
+	if (needlelen > haystacklen) {
+		return NULL;
+	}
+
+	for (size_t i = 0; i <= haystacklen - needlelen; ++i) {
+		if (memcmp(haystack + i, needle, needlelen) == 0) {
+			return haystack + i;
+		}
+	}
+
+	return NULL;
+}
+
 static uint8_t psb[16] = {
 	0x02, 0x82, 0x02, 0x82, 0x02, 0x82, 0x02, 0x82,
 	0x02, 0x82, 0x02, 0x82, 0x02, 0x82, 0x02, 0x82
@@ -212,7 +226,7 @@ void pt_decoder_flush(decoder_t* self){
 	self->decoder_state_result->start = 0;
 	self->decoder_state_result->valid = 0;
 	self->decoder_state_result->valid = false;
-}	
+}
 
 uint64_t pt_decoder_get_page_fault_addr(decoder_t* self){
 	return self->page_fault_addr;
@@ -357,7 +371,7 @@ static inline void disasm(decoder_t* self){
 	static uint64_t failed_page = 0;
 	should_disasm_t* res = self->decoder_state_result;
 	if(res->valid && (!is_empty_tnt_cache(self->tnt_cache_state) || self->disassembler_state->trace_mode)){
-    	LOGGER("\n\ndisasm(%lx,%lx)\tTNT: %ld\n", res->start, res->end, count_tnt(self->tnt_cache_state));
+    	LOGGER("\n\ndisasm(0x%llx, 0x%llx)\tTNT: %ld\n", res->start, res->end, count_tnt(self->tnt_cache_state));
 			if(unlikely(trace_disassembler(self->disassembler_state, res->start, res->end, self->tnt_cache_state, &failed_page, self->mode) == disas_page_fault)){
 				self->page_fault_found = true;
 				self->page_fault_addr = failed_page;
@@ -379,7 +393,7 @@ static void tip_handler(decoder_t* self, uint8_t** p){
 
 	get_ip_val(self, p);
 
-	LOGGER("TIP    \t%lx (TNT: %d)\n", self->last_tip, count_tnt(self->tnt_cache_state));
+	LOGGER("TIP    \t0x%llx (TNT: %d)\n", self->last_tip, count_tnt(self->tnt_cache_state));
 	decoder_handle_tip(self->decoder_state, self->last_tip, self->decoder_state_result);
 	disasm(self);
 #ifdef DECODER_LOG
@@ -402,7 +416,7 @@ static void tip_pge_handler(decoder_t* self, uint8_t** p){
 
 	get_ip_val(self, p);
 
-	LOGGER("PGE    \t%lx (TNT: %d)\n", self->last_tip, count_tnt(self->tnt_cache_state));
+	LOGGER("PGE    \t0x%llx (TNT: %d)\n", self->last_tip, count_tnt(self->tnt_cache_state));
 	decoder_handle_pge(self->decoder_state, self->last_tip, self->decoder_state_result);
  	 assert(!self->decoder_state_result->valid);
 
@@ -426,7 +440,7 @@ static void tip_pgd_handler(decoder_t* self, uint8_t** p){
 	}
 
 	get_ip_val(self, p);
-	LOGGER("PGD    \t%lx (TNT: %d)\n", self->last_tip, count_tnt(self->tnt_cache_state));
+	LOGGER("PGD    \t0x%llx (TNT: %d)\n", self->last_tip, count_tnt(self->tnt_cache_state));
 	decoder_handle_pgd(self->decoder_state, self->last_tip, self->decoder_state_result);
 	disasm(self);
 
@@ -450,17 +464,17 @@ static void tip_fup_handler(decoder_t* self, uint8_t** p){
 	if(self->ovp_state){
 		self->decoder_state->state = TraceEnabledWithLastIP;
 		self->decoder_state->last_ip = get_ip_val(self, p);
-	
-		LOGGER("FUP OVP   \t%lx (TNT: %d)\n", self->last_tip, count_tnt(self->tnt_cache_state));
+
+		LOGGER("FUP OVP   \t0x%llx (TNT: %d)\n", self->last_tip, count_tnt(self->tnt_cache_state));
 
 		self->ovp_state = false;
 		self->fup_bind_pending = false;
 
 		return;
 	}
-		
+
 	self->last_fup_src = get_ip_val(self, p);
-	LOGGER("FUP    \t%lx (TNT: %d)\n", self->last_fup_src, count_tnt(self->tnt_cache_state));
+	LOGGER("FUP    \t0x%llx (TNT: %d)\n", self->last_fup_src, count_tnt(self->tnt_cache_state));
 
 	self->fup_bind_pending = true;
 #ifdef DECODER_LOG
@@ -471,7 +485,7 @@ static void tip_fup_handler(decoder_t* self, uint8_t** p){
 static inline void pip_handler(decoder_t* self, uint8_t** p){
 #ifdef SAMPLE_DECODED_DETAILED
 	(*p) += PT_PKT_PIP_LEN-6;
-	LOGGER("PIP\t%llx\n", (get_val(p, 6) >> 1) << 5);
+	LOGGER("PIP\t0x%llx\n", (get_val(p, 6) >> 1) << 5);
 #else
 	//get_val(p, 6);
 	(*p) += PT_PKT_PIP_LEN;
@@ -762,17 +776,17 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 		p = end;
 		goto handle_pt_exit;
 	}
-	
+
 	DISPATCH_L1();
 	handle_pt_mode:
-		/* 
+		/*
 		// Code to test if TSX code has been executed inside the guest
 		if ((((char*)(p))[1] & 0xE0) == 0x20){
 			if ( (((char*)(p))[1] & 0x3))
 				fprintf(stderr, "TSX FOUND %x\n", (((char*)(p))[1] & 0x3));
 		}
 		*/
-		
+
 		switch (p[1] >> 5) {
 			case 0:
 				switch (p[1] & 3) {
@@ -789,7 +803,7 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 			default:
 				break;
 		}
-		
+
 		p += PT_PKT_MODE_LEN;
 		LOGGER("MODE\n");
 		#ifdef DECODER_LOG
@@ -835,7 +849,7 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 				self->log.cbr++;
 				#endif
 				DISPATCH_L1();
-				
+
 			case __extension__ 0b00100011:	/* PSBEND */
 				p += PT_PKT_PSBEND_LEN;
 				LOGGER("PSBEND\n");
@@ -907,7 +921,7 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 
 		}
 	handle_pt_tnt8:
-		LOGGER("TNT %x\n", *p);
+		LOGGER("TNT 0x%02x\n", *p);
 		append_tnt_cache(self->tnt_cache_state, (uint64_t)(*p));
 		p++;
 		#ifdef DECODER_LOG
@@ -945,7 +959,7 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 
 		self->disassembler_state->infinite_loop_found = false;
 	}
-		
+
 	pt_decoder_flush(self);
 
 	if(pt_overflowed){

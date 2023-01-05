@@ -28,15 +28,15 @@ SOFTWARE.
 #include "libxdc.h"
 #include "core.h"
 
-/* 
+/*
 ==== Required Function Pointers ====
 
-redqueen_register_transition  // to re-assemble covered BBs 
+redqueen_register_transition  // to re-assemble covered BBs
 set_rq_instruction            // to register RQ instruction candidate
 
 
-page_cache_cs_malloc 
-page_cache_disassemble_iter 
+page_cache_cs_malloc
+page_cache_disassemble_iter
 
 */
 
@@ -51,7 +51,7 @@ __attribute__ ((visibility ("default")))  void libxdc_reset_trace_cache(libxdc_t
 }
 
 /*
-Initlizes basic data structeres and expects function pointers to specific functions. 
+Initlizes basic data structeres and expects function pointers to specific functions.
 */
 __attribute__ ((visibility ("default")))  libxdc_t* libxdc_init(uint64_t filter[4][2], void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*), void* page_cache_fetch_opaque, void* bitmap_ptr, size_t bitmap_size){
   libxdc_t* self = malloc(sizeof(libxdc_t));

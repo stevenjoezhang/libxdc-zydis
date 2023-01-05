@@ -78,13 +78,13 @@ cofi_ins cb_lookup[] = {
 cofi_ins udb_lookup[] = {
 	{X86_INS_JMP,		IGN_MOD_RM,	0xe9},
 	{X86_INS_JMP,		IGN_MOD_RM, 0xeb},
-	{X86_INS_CALL,	IGN_MOD_RM,	0xe8},	
+	{X86_INS_CALL,	IGN_MOD_RM,	0xe8},
 };
 
 /* indirect branch */
 cofi_ins ib_lookup[] = {
 	{X86_INS_JMP,		MODRM_REG(4),	0xff},
-	{X86_INS_CALL,	MODRM_REG(2),	0xff},	
+	{X86_INS_CALL,	MODRM_REG(2),	0xff},
 };
 
 /* near ret */
@@ -92,8 +92,8 @@ cofi_ins nr_lookup[] = {
 	{X86_INS_RET,		IGN_MOD_RM,	0xc3},
 	{X86_INS_RET,		IGN_MOD_RM,	0xc2},
 };
- 
-/* far transfers */ 
+
+/* far transfers */
 cofi_ins ft_lookup[] = {
 	{X86_INS_INT3,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
 	{X86_INS_INT,				IGN_MOD_RM,	IGN_OPODE_PREFIX},
@@ -227,12 +227,12 @@ static bool disassembler_iter(disassembler_t* self, uint64_t* address, cs_insn *
 			return true;
 			//return cs_disasm_iter(self->handle, (const uint8_t**) &code_ptr, &code_size, address, insn);
 		}
-	} 
+	}
 	else {
 		//printf("=> C\n");
 		code_ptr = code + (*address&0xFFF);
 
-		//printf("Disassemble...(%lx %x)\n", code_ptr, *code_ptr);
+		printf("Disassemble...(%lx %x)\n", code_ptr, *code_ptr);
 		return cs_disasm_iter(*current_handle, (const uint8_t**) &code_ptr, &code_size, address, insn);
 	}
 }
@@ -263,11 +263,11 @@ static cofi_type opcode_analyzer(disassembler_t* self, cs_insn *ins){
 	for (i = 0; i < LOOKUP_TABLES; i++){
 		for (j = 0; j < lookup_table_sizes[i]; j++){
 			if (ins->id == lookup_tables[i][j].opcode){
-				
+
 				/* check MOD R/M */
 				if (lookup_tables[i][j].modrm != IGN_MOD_RM && lookup_tables[i][j].modrm != (details.modrm & MODRM_AND))
-						continue;	
-						
+						continue;
+
 				/* check opcode prefix byte */
 				if (lookup_tables[i][j].opcode_prefix != IGN_OPODE_PREFIX && lookup_tables[i][j].opcode_prefix != details.opcode[0])
 						continue;
@@ -279,20 +279,20 @@ static cofi_type opcode_analyzer(disassembler_t* self, cs_insn *ins){
 }
 
 static node_id_t disassemble_bb(disassembler_t* self, uint64_t base_address, uint64_t limit, uint64_t* failed_page, disassembler_mode_t mode){
-	//printf("DISASM BB\n");
+	// printf("DISASM BB: 0x%llx\n", base_address);
 	cs_insn *insn = disassembler_cs_malloc(self, mode);
 	uint64_t address = base_address;
 	node_id_t res_nid = NODE_PAGE_FAULT;
 	while(disassembler_iter(self, &address, insn, failed_page, mode)){
-		//printf("DISASM %s %s\n",insn->mnemonic, insn->op_str);
+		// printf("DISASM %s %s\n",insn->mnemonic, insn->op_str);
 		if (insn->address > limit){
 			res_nid = disassembler_cfg_add_node(&self->cfg, base_address, insn->address, OUT_OF_BOUNDS);
 			break;
 		}
-		
+
 		node_id_t nid = disassembler_cfg_get_node_id(&self->cfg, insn->address);
 
-		if( nid != NODE_NOT_DEFINED) { 
+		if( nid != NODE_NOT_DEFINED) {
 			//printf("DISASM FOUND PREFIX\n");
 			//we reached another preexisting basicblock without cofi instruction, copy the data for this node
 			res_nid = disassembler_cfg_prefix_node(&self->cfg, base_address, nid);
@@ -300,18 +300,18 @@ static node_id_t disassemble_bb(disassembler_t* self, uint64_t base_address, uin
 		}
 
 		cofi_type type = opcode_analyzer(self, insn);
-		
+
 		if( type != NO_COFI_TYPE ){
 			//printf("DISASM FOUND COFI\n");
 			res_nid = disassembler_cfg_add_node(&self->cfg, base_address, insn->address, type);
 
 			if (type == COFI_TYPE_CONDITIONAL_BRANCH){
-				uint64_t target = hex_to_bin(insn->op_str);	
+				uint64_t target = hex_to_bin(insn->op_str);
 				uint64_t fallthrough = insn->address + insn->size;
 				disassembler_cfg_add_br1_addr(&self->cfg, res_nid, target);
 				disassembler_cfg_add_br2_addr(&self->cfg, res_nid, fallthrough);
 			} else if (type == COFI_TYPE_UNCONDITIONAL_DIRECT_BRANCH ){
-				uint64_t target = hex_to_bin(insn->op_str);	
+				uint64_t target = hex_to_bin(insn->op_str);
 				disassembler_cfg_add_br1_addr(&self->cfg, res_nid, target);
 			} else if (type == COFI_TYPE_INDIRECT_BRANCH || type == COFI_TYPE_NEAR_RET || type == COFI_TYPE_FAR_TRANSFERS) {
 				//NOTHING TO BE DONE HERE
@@ -323,7 +323,7 @@ static node_id_t disassemble_bb(disassembler_t* self, uint64_t base_address, uin
 	}
 	if(res_nid != NODE_PAGE_FAULT && self->basic_block_callback){
 		self->basic_block_callback(self->basic_block_callback_opaque, mode, self->cfg.base_addr[res_nid], self->cfg.cofi_addr[res_nid]);
-	} 
+	}
 	cs_free(insn, 1);
 	return res_nid;
 }
@@ -497,7 +497,7 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 	//printf("trace_disassembler_loop %lx \n", *entry_point);
 
  	static void* dispatch_table[] = {
-		&&do_conditional_branch,		// COFI_TYPE_CONDITIONAL_BRANCH, 
+		&&do_conditional_branch,		// COFI_TYPE_CONDITIONAL_BRANCH,
 		&&do_unconditional_branch,		// COFI_TYPE_UNCONDITIONAL_DIRECT_BRANCH
 		&&do_indirect_branch,			// COFI_TYPE_INDIRECT_BRANCH
 		&&do_near_ret,					// COFI_TYPE_NEAR_RET
@@ -524,14 +524,14 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 	if(likely(!trace_mode)){
 		reset_tracelet_tmp_cache(self->trace_cache->trace_cache);
 	}
-	
+
 	nid = get_node(self, *entry_point, tnt_cache_state, failed_page, mode);
 
 	dispatch_type = self->cfg.type[nid];
 
 	DISPATCH();
 	do_conditional_branch:
-		
+
 		//printf("cond branch ");
 		if(likely(!trace_mode) && self->trace_cache->trace_cache->cache.tnt_bits == MAX_RESULTS_PER_CACHE-1){
 			*entry_point = self->cfg.cofi_addr[nid];
@@ -540,8 +540,8 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 			}
 			return disas_success;
 		}
-		
-				
+
+
 		switch(process_tnt_cache(tnt_cache_state)){
 			case TNT_EMPTY:
 				//printf("empty\n");
@@ -550,7 +550,7 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 				}
 				return disas_tnt_empty;
 
-			case TAKEN:		
+			case TAKEN:
 				//printf("taken 1\n");
 				if(unlikely(trace_mode)){
 					self->trace_edge_callback(self->trace_edge_callback_opaque,  self->cfg.cofi_addr[nid], self->cfg.br1_addr[nid] );
@@ -621,7 +621,7 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 		if(likely(!trace_mode)){
 			*new_tracelet = new_from_tracelet_cache_tmp(self->trace_cache->trace_cache, false);
 		}
-		return disas_out_of_bounds;	
+		return disas_out_of_bounds;
 
 	do_infinite_loop:
 		//printf("inf-loop 1\n");
@@ -629,7 +629,7 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 			*new_tracelet = new_from_tracelet_cache_tmp(self->trace_cache->trace_cache, false);
 		}
 		return disas_infinite_loop;
-	
+
 	do_page_cache_failed:
 		//printf("page_cache_failed 1\n");
 		return disas_page_fault;
@@ -657,7 +657,7 @@ __attribute__((hot)) disas_result_t trace_disassembler(disassembler_t* self, uin
 		new_tracelet = trace_cache_fetch(self->trace_cache, key);
 		if(new_tracelet){
 			entry_point_tmp = apply_trace_cache_to_bitmap(new_tracelet, tnt_cache_state, true, self->fuzz_bitmap);
-			
+
 			if(!new_tracelet->cont_exec){
 				return disas_success;
 			}

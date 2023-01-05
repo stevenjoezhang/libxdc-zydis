@@ -101,10 +101,10 @@ void disassembler_cfg_inspect(disassembler_cfg_t* self, node_id_t nid){
             }
             printf("(0x%lx)",self->br1_addr[nid]);
             break;
-	    case COFI_TYPE_INDIRECT_BRANCH: 
+	    case COFI_TYPE_INDIRECT_BRANCH:
             printf("NODE_INDIRECT{ ");
             break;
-	    case COFI_TYPE_NEAR_RET: 
+	    case COFI_TYPE_NEAR_RET:
             printf("NODE_RET{ ");
             break;
 	    case COFI_TYPE_FAR_TRANSFERS:
@@ -119,6 +119,11 @@ void disassembler_cfg_inspect(disassembler_cfg_t* self, node_id_t nid){
         //PAGE_CACHE_FAILED,
     }
     printf(" id: %d, at: 0x%lx, cofi_addr: 0x%lx }\n", nid, self->base_addr[nid], self->cofi_addr[nid]);
+}
+
+
+static void *reallocarray(void *ptr, size_t nmemb, size_t size) {
+    return realloc(ptr, nmemb * size);
 }
 
 
@@ -137,10 +142,10 @@ void disassmembler_cfg_resize(disassembler_cfg_t* self){
 
 uint32_t disassembler_cfg_get_node_id(disassembler_cfg_t* self, uint64_t ip) {
     khiter_t k;
-	k = kh_get(ADDR0, self->ip_to_node_id, ip); 
+	k = kh_get(ADDR0, self->ip_to_node_id, ip);
 	if(k != kh_end(self->ip_to_node_id)){
-		return kh_value(self->ip_to_node_id, k); 
-	} 
+		return kh_value(self->ip_to_node_id, k);
+	}
 	return NODE_NOT_DEFINED;
 }
 
@@ -155,13 +160,13 @@ static inline node_id_t disassembler_cfg_next_bid(disassembler_cfg_t* self){
 
 node_id_t disassembler_cfg_add_node(disassembler_cfg_t* self, uint64_t base_ip,  uint64_t cofi_ip, cofi_type type){
     node_id_t new_nid = disassembler_cfg_next_nid(self);
-    self->base_addr[new_nid] = base_ip; 
-    self->cofi_addr[new_nid] = cofi_ip; 
+    self->base_addr[new_nid] = base_ip;
+    self->cofi_addr[new_nid] = cofi_ip;
     self->type[new_nid] = type;
-    
+
     int ret;
 	khiter_t k;
-	k = kh_put(ADDR0, self->ip_to_node_id, base_ip, &ret); 
+	k = kh_put(ADDR0, self->ip_to_node_id, base_ip, &ret);
 	kh_value(self->ip_to_node_id, k) = new_nid;
     return new_nid;
 }
@@ -182,7 +187,7 @@ node_id_t disassembler_cfg_prefix_node(disassembler_cfg_t* self, uint64_t base_a
 }
 
 void disassembler_cfg_add_br1_addr(disassembler_cfg_t* self, node_id_t node, uint64_t target){
-    
+
     self->br1_addr[node]=target;
 
     node_id_t target_nid = disassembler_cfg_get_node_id(self, target);
@@ -193,7 +198,7 @@ void disassembler_cfg_add_br1_addr(disassembler_cfg_t* self, node_id_t node, uin
 }
 
 void disassembler_cfg_add_br2_addr(disassembler_cfg_t* self, node_id_t node, uint64_t target){
-    
+
     self->br2_addr[node]=target;
     node_id_t target_nid = disassembler_cfg_get_node_id(self, target);
     self->br2[node].node_id = target_nid;

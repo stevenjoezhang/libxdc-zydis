@@ -22,16 +22,11 @@ SOFTWARE.
 
 #pragma once
 
-#include <sys/mman.h>
-#include <sys/fcntl.h>
-#include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <unistd.h>
 #include <stddef.h>
-#include <sys/time.h>
 #include <stdbool.h>
 #include "tnt_cache.h"
 #include "disassembler.h"

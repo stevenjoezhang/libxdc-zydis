@@ -27,10 +27,7 @@ SOFTWARE.
 #include <stdbool.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include "khash.h"
-#include <unistd.h>
-#include <sys/time.h>
 #include <capstone/capstone.h>
 #include <capstone/x86.h>
 #include "tnt_cache.h"
@@ -45,7 +42,7 @@ typedef struct tracelet_cache_s{
 	uint64_t next_entry_address;
 	uint8_t tnt_bits;
 
-	uint8_t result_bits; 
+	uint8_t result_bits;
 	uint8_t result_bits_max;
 	uint32_t* bitmap_results;
 	bool cont_exec;
@@ -88,9 +85,9 @@ typedef struct{
 } cofi_ins;
 
 
-typedef enum disas_result_s { 
-	disas_success, 
-	disas_tnt_empty, 
+typedef enum disas_result_s {
+	disas_success,
+	disas_tnt_empty,
 	disas_tip_pending,
 	disas_out_of_bounds,
 	disas_infinite_loop,
@@ -98,9 +95,9 @@ typedef enum disas_result_s {
 } disas_result_t;
 
 
-typedef enum disassembler_mode_s { 
-	mode_16, 
-	mode_32, 
+typedef enum disassembler_mode_s {
+	mode_16,
+	mode_32,
 	mode_64,
 } disassembler_mode_t;
 
@@ -146,10 +143,10 @@ typedef struct disassembler_s{
 
 
 
-typedef enum decoder_state { 
-	TraceDisabled=1, 
-	TraceEnabledWithLastIP, 
-	TraceEnabledWOLastIP} 
+typedef enum decoder_state {
+	TraceDisabled=1,
+	TraceEnabledWithLastIP,
+	TraceEnabledWOLastIP}
 decoder_state_e;
 
 typedef struct DecoderStateMachine{
@@ -170,7 +167,7 @@ typedef struct ShouldDisasm{
 typedef struct decoder_s{
 	bool page_fault_found;
 	uint64_t page_fault_addr;
-	bool ovp_state; 
+	bool ovp_state;
 	uint64_t last_tip;
 	uint64_t last_tip_tmp;
 	uint64_t last_fup_src;
@@ -208,10 +205,10 @@ typedef struct decoder_s{
 #endif
 } decoder_t;
 
-typedef enum decoder_result_s { 
-	decoder_success, 
+typedef enum decoder_result_s {
+	decoder_success,
 	decoder_success_pt_overflow,
-	decoder_page_fault, 
+	decoder_page_fault,
 	decoder_error,
 	decoder_unkown_packet,
 } decoder_result_t;
@@ -228,5 +225,5 @@ typedef struct libxdc_s {
 #ifdef DEBUG_TRACES
 #define LOGGER(format, ...) (printf(format, ##__VA_ARGS__))
 #else
-#define LOGGER(format, ...)  (void)0 
+#define LOGGER(format, ...)  (void)0
 #endif

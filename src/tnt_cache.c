@@ -22,7 +22,6 @@ SOFTWARE.
 
 #include "tnt_cache.h"
 #include <assert.h>
-#include <sys/mman.h>
 #include <string.h>
 
 //#define DEBUG
@@ -64,10 +63,10 @@ uint64_t get_tnt_hash(tnt_cache_t* self){
 	if(self->bl_tnt == 0){
 		self->bl_max = 0;
 		self->bl_pos = 0;
-		// fast path 
+		// fast path
 		return 0;
 	}
-	
+
 	count = (self->bl_tnt/TNT_HASH_SPLIT_VALUE_BITS) != 0 ? TNT_HASH_SPLIT_VALUE_BITS : self->bl_tnt;
 	//count = (TNT_HASH_SPLIT_VALUE_BITS*!!(self->bl_tnt/TNT_HASH_SPLIT_VALUE_BITS)) | (self->bl_tnt*!!!(self->bl_tnt/TNT_HASH_SPLIT_VALUE_BITS));
 
@@ -83,10 +82,10 @@ uint64_t get_tnt_hash(tnt_cache_t* self){
 
 	//value >>= 58-count;
 	//fprintf(stderr, "=> %lx\n", value);
-	
+
 
 	//fprintf(stderr, "count: %d\n", count);
-	uint8_t bits_1 = 32 - (self->bl_pos%32); 	
+	uint8_t bits_1 = 32 - (self->bl_pos%32);
 
 	uint8_t tmp1 = (TNT_HASH_SPLIT_VALUE_BITS-bits_1)%32;
 	uint8_t tmp2 = !!((TNT_HASH_SPLIT_VALUE_BITS-bits_1)/32);
@@ -118,7 +117,7 @@ uint64_t get_tnt_hash(tnt_cache_t* self){
 	//fprintf(stderr, "=> %lx\n", value);
 	//assert(value < 0x400000000000000ULL);
 	return (count << TNT_HASH_SPLIT_VALUE_BITS) | value;
-}	
+}
 
 
 #ifdef NON_BRANCH_LESS_CODE
@@ -167,7 +166,7 @@ static inline uint8_t process_tnt_cache_bl(tnt_cache_t* self){
 static inline void append_tnt_cache_bl(tnt_cache_t* self, uint8_t data){
 	uint8_t bits = bsr(data)-SHORT_TNT_OFFSET;
 	uint64_t offset = (self->bl_tnt+self->bl_pos);
-	
+
 	uint64_t tmp_data = (((uint64_t)data) << (64-bits-SHORT_TNT_OFFSET)) >> (offset%32);
 	uint64_t tmp_value = (((uint64_t)self->bl_tnt_memory[(offset/32)%BL_BUF_ENTRIES]) << 32) | (uint64_t)self->bl_tnt_memory[((offset/32)+1)%BL_BUF_ENTRIES];
 	uint64_t result = (tmp_value & ~(0xFFFFFFFFFFFFFFFFULL >> (offset%32))) | tmp_data;
@@ -220,7 +219,7 @@ void append_tnt_cache_ltnt(tnt_cache_t* self, uint64_t data){
 #ifdef BRANCH_LESS_CODE
 	assert(0);
 #endif
-}	
+}
 
 bool is_empty_tnt_cache(tnt_cache_t* self){
 #ifdef NON_BRANCH_LESS_CODE
@@ -250,7 +249,8 @@ tnt_cache_t* tnt_cache_init(void){
 #endif
 
 #ifdef BRANCH_LESS_CODE
-	self->bl_tnt_memory = (uint32_t*)mmap(NULL, BUF_SIZE/8, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+	// self->bl_tnt_memory = (uint32_t*)mmap(NULL, BUF_SIZE/8, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+	self->bl_tnt_memory = (uint32_t*)malloc(BUF_SIZE / 8);
 	self->bl_max = 0;
 	self->bl_pos = 0;
 	self->bl_tnt = 0;
@@ -282,7 +282,8 @@ void tnt_cache_destroy(tnt_cache_t* self){
 #endif
 
 #ifdef BRANCH_LESS_CODE
-	munmap(self->bl_tnt_memory, BUF_SIZE/8);
+	// munmap(self->bl_tnt_memory, BUF_SIZE/8);
+	free(self->bl_tnt_memory);
 	self->bl_max = 0;
 	self->bl_pos = 0;
 	self->bl_tnt = 0;
