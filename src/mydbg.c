@@ -6,7 +6,7 @@ void DbgPrint(char* FormatStr, ...)
 	va_list vaList;
 
 	va_start(vaList, FormatStr);
-	sprintf(dbgout, FormatStr, vaList);
+	sprintf_s(dbgout, 1000, FormatStr, vaList);
 	OutputDebugStringA(dbgout);
 	va_end(vaList);
 }

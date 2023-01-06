@@ -61,7 +61,7 @@ See: https://github.com/andikleen/simple-pt/blob/master/fastdecode.c
 
 #include "libxdc.h"
 #include "decoder.h"
-
+#include "mydbg.h"
 
 #define BENCHMARK 				1
 
@@ -763,6 +763,9 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 
 	bool pt_overflowed = false;
 	self->page_fault_found = false;
+
+	
+	// DbgPrint("libxdc_decoder start decoding");
 
 	uint8_t *end = map + len;
 	uint8_t *p = map;

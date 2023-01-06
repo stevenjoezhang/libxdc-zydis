@@ -5,7 +5,8 @@ project(libxdc)
 include_directories(./include)
 
 # set(CMAKE_C_FLAGS "-Ofast -finline-functions -flto -v /MD")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Ofast -finline-functions /MD")
+# set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Ofast -finline-functions /MD")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -finline-functions /MD")	# for debug
 
 aux_source_directory(${CMAKE_SOURCE_DIR}/src src_dir)
 

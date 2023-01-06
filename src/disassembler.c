@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
+#define bool _Bool
 #include "disassembler.h"
 #include "cfg.h"
 #include "mydbg.h"
@@ -233,7 +234,7 @@ static bool disassembler_iter(disassembler_t* self, uint64_t* address, cs_insn *
 		//printf("=> C\n");
 		code_ptr = code + (*address&0xFFF);
 
-		DbgPrint("Disassemble...(%lx %x)\n", code_ptr, *code_ptr);
+		// DbgPrint("Disassemble...(%lx %x)\n", code_ptr, *code_ptr);
 		return cs_disasm_iter(*current_handle, (const uint8_t**) &code_ptr, &code_size, address, insn);
 	}
 }
@@ -280,12 +281,14 @@ static cofi_type opcode_analyzer(disassembler_t* self, cs_insn *ins){
 }
 
 static node_id_t disassemble_bb(disassembler_t* self, uint64_t base_address, uint64_t limit, uint64_t* failed_page, disassembler_mode_t mode){
-	// printf("DISASM BB: 0x%llx\n", base_address);
+	printf("DISASM BB: 0x%llx\n", base_address);
+	printf("x64 handler: %zx\n", self->handle_64);
 	cs_insn *insn = disassembler_cs_malloc(self, mode);
 	uint64_t address = base_address;
 	node_id_t res_nid = NODE_PAGE_FAULT;
 	while(disassembler_iter(self, &address, insn, failed_page, mode)){
-		// printf("DISASM %s %s\n",insn->mnemonic, insn->op_str);
+		printf("insn id: %u; address=0x%p\n", insn->id, (void *)insn->address);
+		printf("DISASM %s %s\n",insn->mnemonic, insn->op_str);
 		if (insn->address > limit){
 			res_nid = disassembler_cfg_add_node(&self->cfg, base_address, insn->address, OUT_OF_BOUNDS);
 			break;

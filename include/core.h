@@ -27,6 +27,7 @@ SOFTWARE.
 #include <stdbool.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdbool.h>
 #include "khash.h"
 #include <capstone/capstone.h>
 #include <capstone/x86.h>
