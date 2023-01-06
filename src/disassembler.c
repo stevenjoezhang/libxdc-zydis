@@ -118,7 +118,7 @@ cofi_ins ft_lookup[] = {
 	{X86_INS_VMRESUME,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
 	{X86_INS_UD0, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
 	{X86_INS_UD2, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
-	{X86_INS_UD2B, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
+	{X86_INS_UD1, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
 
 };
 
@@ -281,14 +281,14 @@ static cofi_type opcode_analyzer(disassembler_t* self, cs_insn *ins){
 }
 
 static node_id_t disassemble_bb(disassembler_t* self, uint64_t base_address, uint64_t limit, uint64_t* failed_page, disassembler_mode_t mode){
-	printf("DISASM BB: 0x%llx\n", base_address);
-	printf("x64 handler: %zx\n", self->handle_64);
+	// printf("DISASM BB: 0x%llx\n", base_address);
+	// printf("x64 handler: %zx\n", self->handle_64);
 	cs_insn *insn = disassembler_cs_malloc(self, mode);
 	uint64_t address = base_address;
 	node_id_t res_nid = NODE_PAGE_FAULT;
 	while(disassembler_iter(self, &address, insn, failed_page, mode)){
-		printf("insn id: %u; address=0x%p\n", insn->id, (void *)insn->address);
-		printf("DISASM %s %s\n",insn->mnemonic, insn->op_str);
+		// printf("insn id: %u; address=0x%p\n", insn->id, (void *)insn->address);
+		// printf("DISASM %s %s\n",insn->mnemonic, insn->op_str);
 		if (insn->address > limit){
 			res_nid = disassembler_cfg_add_node(&self->cfg, base_address, insn->address, OUT_OF_BOUNDS);
 			break;
