@@ -22,19 +22,8 @@ SOFTWARE.
 
 #include "disassembler.h"
 #include "cfg.h"
-#include <Windows.h>
-#include <debugapi.h>
+#include "mydbg.h"
 
-void DbgPrint(char* FormatStr, ...)
-{
-	char dbgout[1000];
-	va_list vaList;
-
-	va_start(vaList, FormatStr);
-	sprintf(dbgout, FormatStr, vaList);
-	OutputDebugStringA(dbgout);
-	va_end(vaList);
-}
 
 #if CS_API_MAJOR < 4
 #error Unsupported capstone version (capstone engine v4 is required)!
@@ -244,7 +233,7 @@ static bool disassembler_iter(disassembler_t* self, uint64_t* address, cs_insn *
 		//printf("=> C\n");
 		code_ptr = code + (*address&0xFFF);
 
-		printf("Disassemble...(%lx %x)\n", code_ptr, *code_ptr);
+		DbgPrint("Disassemble...(%lx %x)\n", code_ptr, *code_ptr);
 		return cs_disasm_iter(*current_handle, (const uint8_t**) &code_ptr, &code_size, address, insn);
 	}
 }

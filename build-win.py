@@ -11,7 +11,7 @@ if not clang.is_file():
     logging.fatal("Cannot find clang executable")
     exit(1)
 
-lib = Path("C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.30.30705\\bin\\Hostx64\\x64\\lib.exe")
+lib = Path("C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.33.31629\\bin\\Hostx64\\x64\\lib.exe")
 if not lib.is_file():
     logging.fatal("Cannot find lib executable")
     exit(1)
@@ -24,15 +24,15 @@ def run_build(args):
         logging.fatal("Build terminated due to previous errors")
         exit(1)
 
-capstone_include_dir = Path("D:\\Codespace\\capstone\\build\\install\\include")
+capstone_include_dir = Path(Path.cwd() / "include")
 
-source_dir = Path("D:\\Codespace\\libxdc\\src")
+source_dir = Path(Path.cwd() / "src")
 source_files = list(source_dir.glob("*.c"))
 object_files = list(map(lambda f: f.name + ".obj", source_files))
 
 for (f, of) in zip(source_files, object_files):
     logging.info("Building %s", of)
-    run_build([
+    arg_list = [
         str(clang),
         "-c",
         "-Ofast",
@@ -42,7 +42,9 @@ for (f, of) in zip(source_files, object_files):
         # "/DDEBUG_TRACES",
         "-o", str(of),
         str(f),
-    ])
+    ]
+    print(" ".join(arg_list))
+    run_build(arg_list)
 
 logging.info("Build completed")
 logging.info("Archiving")
