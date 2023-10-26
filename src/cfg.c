@@ -122,9 +122,11 @@ void disassembler_cfg_inspect(disassembler_cfg_t* self, node_id_t nid){
 }
 
 
+#ifdef WIN32
 static void *reallocarray(void *ptr, size_t nmemb, size_t size) {
     return realloc(ptr, nmemb * size);
 }
+#endif
 
 
 void disassmembler_cfg_resize(disassembler_cfg_t* self){

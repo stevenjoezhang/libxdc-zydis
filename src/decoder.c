@@ -138,6 +138,7 @@ See: https://github.com/andikleen/simple-pt/blob/master/fastdecode.c
 static decoder_state_machine_t* decoder_statemachine_new(void);
 static void decoder_statemachine_reset(decoder_state_machine_t* self);
 
+#ifdef WIN32
 static void* memmem(const void* haystack, size_t haystacklen, const void* needle, size_t needlelen) {
 	if (needlelen > haystacklen) {
 		return NULL;
@@ -151,6 +152,7 @@ static void* memmem(const void* haystack, size_t haystacklen, const void* needle
 
 	return NULL;
 }
+#endif
 
 static uint8_t psb[16] = {
 	0x02, 0x82, 0x02, 0x82, 0x02, 0x82, 0x02, 0x82,

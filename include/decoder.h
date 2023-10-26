@@ -31,7 +31,9 @@ SOFTWARE.
 #include "tnt_cache.h"
 #include "disassembler.h"
 
-
+#ifdef LINUX
+#include <unistd.h>
+#endif
 
 #include "core.h"
 
