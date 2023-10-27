@@ -65,3 +65,5 @@ void trace_cache_destroy(trace_cache_t* self);
 void trace_cache_add(trace_cache_t* self, trace_cache_key_t key, tracelet_cache_t* tracelet);
 tracelet_cache_t* trace_cache_fetch(trace_cache_t* self, trace_cache_key_t key);
 
+// kcov cache
+fuzz_kcov_t* kcov_result_init(uint8_t* data_ptr, uint32_t size);

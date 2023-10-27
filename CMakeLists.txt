@@ -23,6 +23,7 @@ endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG_TRACES")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Ofast")
 endif()
@@ -33,8 +34,12 @@ set(CMAKE_LD_FLAGS "${CMAKE_LD_FLAGS} -Wl,--gc-sections")
 
 aux_source_directory(${CMAKE_SOURCE_DIR}/src src_dir)
 
-ADD_LIBRARY(libxdc STATIC ${src_dir})
+set (HEADERS ${CMAKE_SOURCE_DIR}/libxdc.h)
+ADD_LIBRARY(xdc STATIC ${src_dir} ${HEADERS})
 
-install(TARGETS libxdc
+set_target_properties(xdc PROPERTIES PUBLIC_HEADER ${HEADERS})
+
+install(TARGETS xdc
 		ARCHIVE DESTINATION ${CMAKE_SOURCE_DIR}
- 		LIBRARY DESTINATION ${CMAKE_SOURCE_DIR})
+ 		LIBRARY DESTINATION ${CMAKE_SOURCE_DIR}
+		PUBLIC_HEADER DESTINATION /usr/include)

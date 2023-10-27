@@ -53,13 +53,18 @@ __attribute__ ((visibility ("default")))  void libxdc_reset_trace_cache(libxdc_t
 /*
 Initlizes basic data structeres and expects function pointers to specific functions.
 */
-__attribute__ ((visibility ("default")))  libxdc_t* libxdc_init(uint64_t filter[4][2], void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*), void* page_cache_fetch_opaque, void* bitmap_ptr, size_t bitmap_size){
+__attribute__ ((visibility ("default")))  libxdc_t* libxdc_init(libxdc_config_t* config){
   libxdc_t* self = malloc(sizeof(libxdc_t));
   memset(self, 0, sizeof(libxdc_t));
 
-  self->fuzz_bitmap = net_fuzz_bitmap(bitmap_ptr, bitmap_size);
+  if (config->output_enable_bitmap) {
+    self->fuzz_bitmap = net_fuzz_bitmap(config->bitmap_ptr, config->bitmap_size);
+  } 
+  if (config->output_enable_kcov) {
+    self->fuzz_kcov = kcov_result_init(config->kcov_data_ptr, config->kcov_data_size);
+  }
   self->decoder = pt_decoder_init();
-  self->disassembler = init_disassembler(filter, page_cache_fetch_fptr, page_cache_fetch_opaque, self->fuzz_bitmap);
+  self->disassembler = init_disassembler(config->filter, config->page_cache_fetch_fptr, config->page_cache_fetch_opaque, self->fuzz_bitmap);
 
   if ( !self->disassembler )
   {
@@ -116,7 +121,7 @@ __attribute__ ((visibility ("default"))) void libxdc_bitmap_reset(libxdc_t* self
 
 /* decode trace */
 __attribute__ ((visibility ("default"))) decoder_result_t libxdc_decode(libxdc_t* self, uint8_t* data, size_t len){
-  assert(data[len] == 0x55);
+  // assert(data[len] == 0x55);   // we don't have this signature
   return decode_buffer(self->decoder, data, len);
 }
 

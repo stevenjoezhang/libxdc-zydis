@@ -337,9 +337,9 @@ static inline uint64_t get_ip_val(decoder_t* self, uint8_t **pp){
         return 0;
     }
 
-    const uint8_t new_bits = 0xFF40FF30302010FFull >> (type * 8);
+    const uint8_t new_bits = 0xFF40FF30302010FFull >> (type * 8);	// a bit selector
     if (unlikely(type == 3)) {
-        aligned_last_ip = (int64_t)(aligned_pp << 16) >> 16;
+        aligned_last_ip = (int64_t)(aligned_pp << 16) >> 16;	// bit extended
     } else {
         const uint8_t old_bits = sizeof(aligned_last_ip) * 8 - new_bits;   // always less than 64
         const uint64_t new_mask = (~0ull) >> old_bits;
@@ -502,262 +502,262 @@ static inline void pip_handler(decoder_t* self, uint8_t** p){
 __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* map, size_t len){
 
 	static void* dispatch_table_level_1[] = {
-		__extension__ &&handle_pt_pad,		// 00000000
-		__extension__ &&handle_pt_tip_pgd,	// 00000001
-		__extension__ &&handle_pt_level_2,	// 00000010
-		__extension__ &&handle_pt_cyc,		// 00000011
-		__extension__ &&handle_pt_tnt8,		// 00000100
-		__extension__ &&handle_pt_error,		// 00000101
-		__extension__ &&handle_pt_tnt8,		// 00000110
-		__extension__ &&handle_pt_cyc,		// 00000111
-		__extension__ &&handle_pt_tnt8,		// 00001000
-		__extension__ &&handle_pt_error,		// 00001001
-		__extension__ &&handle_pt_tnt8,		// 00001010
-		__extension__ &&handle_pt_cyc,		// 00001011
-		__extension__ &&handle_pt_tnt8,		// 00001100
-		__extension__ &&handle_pt_tip,		// 00001101
-		__extension__ &&handle_pt_tnt8,		// 00001110
-		__extension__ &&handle_pt_cyc,		// 00001111
-		__extension__ &&handle_pt_tnt8,		// 00010000
-		__extension__ &&handle_pt_tip_pge,	// 00010001
-		__extension__ &&handle_pt_tnt8,		// 00010010
-		__extension__ &&handle_pt_cyc,		// 00010011
-		__extension__ &&handle_pt_tnt8,		// 00010100
-		__extension__ &&handle_pt_error,		// 00010101
-		__extension__ &&handle_pt_tnt8,		// 00010110
-		__extension__ &&handle_pt_cyc,		// 00010111
-		__extension__ &&handle_pt_tnt8,		// 00011000
-		__extension__ &&handle_pt_tsc,		// 00011001
-		__extension__ &&handle_pt_tnt8,		// 00011010
-		__extension__ &&handle_pt_cyc,		// 00011011
-		__extension__ &&handle_pt_tnt8,		// 00011100
-		__extension__ &&handle_pt_tip_fup,	// 00011101
-		__extension__ &&handle_pt_tnt8,		// 00011110
-		__extension__ &&handle_pt_cyc,		// 00011111
-		__extension__ &&handle_pt_tnt8,		// 00100000
-		__extension__ &&handle_pt_tip_pgd,	// 00100001
-		__extension__ &&handle_pt_tnt8,		// 00100010
-		__extension__ &&handle_pt_cyc,		// 00100011
-		__extension__ &&handle_pt_tnt8,		// 00100100
-		__extension__ &&handle_pt_error,		// 00100101
-		__extension__ &&handle_pt_tnt8,		// 00100110
-		__extension__ &&handle_pt_cyc,		// 00100111
-		__extension__ &&handle_pt_tnt8,		// 00101000
-		__extension__ &&handle_pt_error,		// 00101001
-		__extension__ &&handle_pt_tnt8,		// 00101010
-		__extension__ &&handle_pt_cyc,		// 00101011
-		__extension__ &&handle_pt_tnt8,		// 00101100
-		__extension__ &&handle_pt_tip,		// 00101101
-		__extension__ &&handle_pt_tnt8,		// 00101110
-		__extension__ &&handle_pt_cyc,		// 00101111
-		__extension__ &&handle_pt_tnt8,		// 00110000
-		__extension__ &&handle_pt_tip_pge,	// 00110001
-		__extension__ &&handle_pt_tnt8,		// 00110010
-		__extension__ &&handle_pt_cyc,		// 00110011
-		__extension__ &&handle_pt_tnt8,		// 00110100
-		__extension__ &&handle_pt_error,		// 00110101
-		__extension__ &&handle_pt_tnt8,		// 00110110
-		__extension__ &&handle_pt_cyc,		// 00110111
-		__extension__ &&handle_pt_tnt8,		// 00111000
-		__extension__ &&handle_pt_error,		// 00111001
-		__extension__ &&handle_pt_tnt8,		// 00111010
-		__extension__ &&handle_pt_cyc,		// 00111011
-		__extension__ &&handle_pt_tnt8,		// 00111100
-		__extension__ &&handle_pt_tip_fup,	// 00111101
-		__extension__ &&handle_pt_tnt8,		// 00111110
-		__extension__ &&handle_pt_cyc,		// 00111111
-		__extension__ &&handle_pt_tnt8,		// 01000000
-		__extension__ &&handle_pt_tip_pgd,	// 01000001
-		__extension__ &&handle_pt_tnt8,		// 01000010
-		__extension__ &&handle_pt_cyc,		// 01000011
-		__extension__ &&handle_pt_tnt8,		// 01000100
-		__extension__ &&handle_pt_error,		// 01000101
-		__extension__ &&handle_pt_tnt8,		// 01000110
-		__extension__ &&handle_pt_cyc,		// 01000111
-		__extension__ &&handle_pt_tnt8,		// 01001000
-		__extension__ &&handle_pt_error,		// 01001001
-		__extension__ &&handle_pt_tnt8,		// 01001010
-		__extension__ &&handle_pt_cyc,		// 01001011
-		__extension__ &&handle_pt_tnt8,		// 01001100
-		__extension__ &&handle_pt_tip,		// 01001101
-		__extension__ &&handle_pt_tnt8,		// 01001110
-		__extension__ &&handle_pt_cyc,		// 01001111
-		__extension__ &&handle_pt_tnt8,		// 01010000
-		__extension__ &&handle_pt_tip_pge,	// 01010001
-		__extension__ &&handle_pt_tnt8,		// 01010010
-		__extension__ &&handle_pt_cyc,		// 01010011
-		__extension__ &&handle_pt_tnt8,		// 01010100
-		__extension__ &&handle_pt_exit,		// 01010101
-		__extension__ &&handle_pt_tnt8,		// 01010110
-		__extension__ &&handle_pt_cyc,		// 01010111
-		__extension__ &&handle_pt_tnt8,		// 01011000
-		__extension__ &&handle_pt_mtc,		// 01011001
-		__extension__ &&handle_pt_tnt8,		// 01011010
-		__extension__ &&handle_pt_cyc,		// 01011011
-		__extension__ &&handle_pt_tnt8,		// 01011100
-		__extension__ &&handle_pt_tip_fup,	// 01011101
-		__extension__ &&handle_pt_tnt8,		// 01011110
-		__extension__ &&handle_pt_cyc,		// 01011111
-		__extension__ &&handle_pt_tnt8,		// 01100000
-		__extension__ &&handle_pt_tip_pgd,	// 01100001
-		__extension__ &&handle_pt_tnt8,		// 01100010
-		__extension__ &&handle_pt_cyc,		// 01100011
-		__extension__ &&handle_pt_tnt8,		// 01100100
-		__extension__ &&handle_pt_error,		// 01100101
-		__extension__ &&handle_pt_tnt8,		// 01100110
-		__extension__ &&handle_pt_cyc,		// 01100111
-		__extension__ &&handle_pt_tnt8,		// 01101000
-		__extension__ &&handle_pt_error,		// 01101001
-		__extension__ &&handle_pt_tnt8,		// 01101010
-		__extension__ &&handle_pt_cyc,		// 01101011
-		__extension__ &&handle_pt_tnt8,		// 01101100
-		__extension__ &&handle_pt_tip,		// 01101101
-		__extension__ &&handle_pt_tnt8,		// 01101110
-		__extension__ &&handle_pt_cyc,		// 01101111
-		__extension__ &&handle_pt_tnt8,		// 01110000
-		__extension__ &&handle_pt_tip_pge,	// 01110001
-		__extension__ &&handle_pt_tnt8,		// 01110010
-		__extension__ &&handle_pt_cyc,		// 01110011
-		__extension__ &&handle_pt_tnt8,		// 01110100
-		__extension__ &&handle_pt_error,		// 01110101
-		__extension__ &&handle_pt_tnt8,		// 01110110
-		__extension__ &&handle_pt_cyc,		// 01110111
-		__extension__ &&handle_pt_tnt8,		// 01111000
-		__extension__ &&handle_pt_error,		// 01111001
-		__extension__ &&handle_pt_tnt8,		// 01111010
-		__extension__ &&handle_pt_cyc,		// 01111011
-		__extension__ &&handle_pt_tnt8,		// 01111100
-		__extension__ &&handle_pt_tip_fup,	// 01111101
-		__extension__ &&handle_pt_tnt8,		// 01111110
-		__extension__ &&handle_pt_cyc,		// 01111111
-		__extension__ &&handle_pt_tnt8,		// 10000000
-		__extension__ &&handle_pt_tip_pgd,	// 10000001
-		__extension__ &&handle_pt_tnt8,		// 10000010
-		__extension__ &&handle_pt_cyc,		// 10000011
-		__extension__ &&handle_pt_tnt8,		// 10000100
-		__extension__ &&handle_pt_error,		// 10000101
-		__extension__ &&handle_pt_tnt8,		// 10000110
-		__extension__ &&handle_pt_cyc,		// 10000111
-		__extension__ &&handle_pt_tnt8,		// 10001000
-		__extension__ &&handle_pt_error,		// 10001001
-		__extension__ &&handle_pt_tnt8,		// 10001010
-		__extension__ &&handle_pt_cyc,		// 10001011
-		__extension__ &&handle_pt_tnt8,		// 10001100
-		__extension__ &&handle_pt_tip,		// 10001101
-		__extension__ &&handle_pt_tnt8,		// 10001110
-		__extension__ &&handle_pt_cyc,		// 10001111
-		__extension__ &&handle_pt_tnt8,		// 10010000
-		__extension__ &&handle_pt_tip_pge,	// 10010001
-		__extension__ &&handle_pt_tnt8,		// 10010010
-		__extension__ &&handle_pt_cyc,		// 10010011
-		__extension__ &&handle_pt_tnt8,		// 10010100
-		__extension__ &&handle_pt_error,		// 10010101
-		__extension__ &&handle_pt_tnt8,		// 10010110
-		__extension__ &&handle_pt_cyc,		// 10010111
-		__extension__ &&handle_pt_tnt8,		// 10011000
-		__extension__ &&handle_pt_mode,		// 10011001
-		__extension__ &&handle_pt_tnt8,		// 10011010
-		__extension__ &&handle_pt_cyc,		// 10011011
-		__extension__ &&handle_pt_tnt8,		// 10011100
-		__extension__ &&handle_pt_tip_fup,	// 10011101
-		__extension__ &&handle_pt_tnt8,		// 10011110
-		__extension__ &&handle_pt_cyc,		// 10011111
-		__extension__ &&handle_pt_tnt8,		// 10100000
-		__extension__ &&handle_pt_tip_pgd,	// 10100001
-		__extension__ &&handle_pt_tnt8,		// 10100010
-		__extension__ &&handle_pt_cyc,		// 10100011
-		__extension__ &&handle_pt_tnt8,		// 10100100
-		__extension__ &&handle_pt_error,		// 10100101
-		__extension__ &&handle_pt_tnt8,		// 10100110
-		__extension__ &&handle_pt_cyc,		// 10100111
-		__extension__ &&handle_pt_tnt8,		// 10101000
-		__extension__ &&handle_pt_error,		// 10101001
-		__extension__ &&handle_pt_tnt8,		// 10101010
-		__extension__ &&handle_pt_cyc,		// 10101011
-		__extension__ &&handle_pt_tnt8,		// 10101100
-		__extension__ &&handle_pt_tip,		// 10101101
-		__extension__ &&handle_pt_tnt8,		// 10101110
-		__extension__ &&handle_pt_cyc,		// 10101111
-		__extension__ &&handle_pt_tnt8,		// 10110000
-		__extension__ &&handle_pt_tip_pge,	// 10110001
-		__extension__ &&handle_pt_tnt8,		// 10110010
-		__extension__ &&handle_pt_cyc,		// 10110011
-		__extension__ &&handle_pt_tnt8,		// 10110100
-		__extension__ &&handle_pt_error,		// 10110101
-		__extension__ &&handle_pt_tnt8,		// 10110110
-		__extension__ &&handle_pt_cyc,		// 10110111
-		__extension__ &&handle_pt_tnt8,		// 10111000
-		__extension__ &&handle_pt_error,		// 10111001
-		__extension__ &&handle_pt_tnt8,		// 10111010
-		__extension__ &&handle_pt_cyc,		// 10111011
-		__extension__ &&handle_pt_tnt8,		// 10111100
-		__extension__ &&handle_pt_tip_fup,	// 10111101
-		__extension__ &&handle_pt_tnt8,		// 10111110
-		__extension__ &&handle_pt_cyc,		// 10111111
-		__extension__ &&handle_pt_tnt8,		// 11000000
-		__extension__ &&handle_pt_tip_pgd,	// 11000001
-		__extension__ &&handle_pt_tnt8,		// 11000010
-		__extension__ &&handle_pt_cyc,		// 11000011
-		__extension__ &&handle_pt_tnt8,		// 11000100
-		__extension__ &&handle_pt_error,		// 11000101
-		__extension__ &&handle_pt_tnt8,		// 11000110
-		__extension__ &&handle_pt_cyc,		// 11000111
-		__extension__ &&handle_pt_tnt8,		// 11001000
-		__extension__ &&handle_pt_error,		// 11001001
-		__extension__ &&handle_pt_tnt8,		// 11001010
-		__extension__ &&handle_pt_cyc,		// 11001011
-		__extension__ &&handle_pt_tnt8,		// 11001100
-		__extension__ &&handle_pt_tip,		// 11001101
-		__extension__ &&handle_pt_tnt8,		// 11001110
-		__extension__ &&handle_pt_cyc,		// 11001111
-		__extension__ &&handle_pt_tnt8,		// 11010000
-		__extension__ &&handle_pt_tip_pge,	// 11010001
-		__extension__ &&handle_pt_tnt8,		// 11010010
-		__extension__ &&handle_pt_cyc,		// 11010011
-		__extension__ &&handle_pt_tnt8,		// 11010100
-		__extension__ &&handle_pt_error,		// 11010101
-		__extension__ &&handle_pt_tnt8,		// 11010110
-		__extension__ &&handle_pt_cyc,		// 11010111
-		__extension__ &&handle_pt_tnt8,		// 11011000
-		__extension__ &&handle_pt_error,		// 11011001
-		__extension__ &&handle_pt_tnt8,		// 11011010
-		__extension__ &&handle_pt_cyc,		// 11011011
-		__extension__ &&handle_pt_tnt8,		// 11011100
-		__extension__ &&handle_pt_tip_fup,	// 11011101
-		__extension__ &&handle_pt_tnt8,		// 11011110
-		__extension__ &&handle_pt_cyc,		// 11011111
-		__extension__ &&handle_pt_tnt8,		// 11100000
-		__extension__ &&handle_pt_tip_pgd,	// 11100001
-		__extension__ &&handle_pt_tnt8,		// 11100010
-		__extension__ &&handle_pt_cyc,		// 11100011
-		__extension__ &&handle_pt_tnt8,		// 11100100
-		__extension__ &&handle_pt_error,		// 11100101
-		__extension__ &&handle_pt_tnt8,		// 11100110
-		__extension__ &&handle_pt_cyc,		// 11100111
-		__extension__ &&handle_pt_tnt8,		// 11101000
-		__extension__ &&handle_pt_error,		// 11101001
-		__extension__ &&handle_pt_tnt8,		// 11101010
-		__extension__ &&handle_pt_cyc,		// 11101011
-		__extension__ &&handle_pt_tnt8,		// 11101100
-		__extension__ &&handle_pt_tip,		// 11101101
-		__extension__ &&handle_pt_tnt8,		// 11101110
-		__extension__ &&handle_pt_cyc,		// 11101111
-		__extension__ &&handle_pt_tnt8,		// 11110000
-		__extension__ &&handle_pt_tip_pge,	// 11110001
-		__extension__ &&handle_pt_tnt8,		// 11110010
-		__extension__ &&handle_pt_cyc,		// 11110011
-		__extension__ &&handle_pt_tnt8,		// 11110100
-		__extension__ &&handle_pt_error,		// 11110101
-		__extension__ &&handle_pt_tnt8,		// 11110110
-		__extension__ &&handle_pt_cyc,		// 11110111
-		__extension__ &&handle_pt_tnt8,		// 11111000
-		__extension__ &&handle_pt_error,		// 11111001
-		__extension__ &&handle_pt_tnt8,		// 11111010
-		__extension__ &&handle_pt_cyc,		// 11111011
-		__extension__ &&handle_pt_tnt8,		// 11111100
-		__extension__ &&handle_pt_tip_fup,	// 11111101
-		__extension__ &&handle_pt_tnt8,		// 11111110
-		__extension__ &&handle_pt_error,		// 11111111
+		__extension__ &&handle_pt_pad,          // 00000000 00
+		__extension__ &&handle_pt_tip_pgd,      // 00000001 01
+		__extension__ &&handle_pt_level_2,      // 00000010 02
+		__extension__ &&handle_pt_cyc,          // 00000011 03
+		__extension__ &&handle_pt_tnt8,         // 00000100 04
+		__extension__ &&handle_pt_error,                // 00000101 05
+		__extension__ &&handle_pt_tnt8,         // 00000110 06
+		__extension__ &&handle_pt_cyc,          // 00000111 07
+		__extension__ &&handle_pt_tnt8,         // 00001000 08
+		__extension__ &&handle_pt_error,                // 00001001 09
+		__extension__ &&handle_pt_tnt8,         // 00001010 0a
+		__extension__ &&handle_pt_cyc,          // 00001011 0b
+		__extension__ &&handle_pt_tnt8,         // 00001100 0c
+		__extension__ &&handle_pt_tip,          // 00001101 0d
+		__extension__ &&handle_pt_tnt8,         // 00001110 0e
+		__extension__ &&handle_pt_cyc,          // 00001111 0f
+		__extension__ &&handle_pt_tnt8,         // 00010000 10
+		__extension__ &&handle_pt_tip_pge,      // 00010001 11
+		__extension__ &&handle_pt_tnt8,         // 00010010 12
+		__extension__ &&handle_pt_cyc,          // 00010011 13
+		__extension__ &&handle_pt_tnt8,         // 00010100 14
+		__extension__ &&handle_pt_error,                // 00010101 15
+		__extension__ &&handle_pt_tnt8,         // 00010110 16
+		__extension__ &&handle_pt_cyc,          // 00010111 17
+		__extension__ &&handle_pt_tnt8,         // 00011000 18
+		__extension__ &&handle_pt_tsc,          // 00011001 19
+		__extension__ &&handle_pt_tnt8,         // 00011010 1a
+		__extension__ &&handle_pt_cyc,          // 00011011 1b
+		__extension__ &&handle_pt_tnt8,         // 00011100 1c
+		__extension__ &&handle_pt_tip_fup,      // 00011101 1d
+		__extension__ &&handle_pt_tnt8,         // 00011110 1e
+		__extension__ &&handle_pt_cyc,          // 00011111 1f
+		__extension__ &&handle_pt_tnt8,         // 00100000 20
+		__extension__ &&handle_pt_tip_pgd,      // 00100001 21
+		__extension__ &&handle_pt_tnt8,         // 00100010 22
+		__extension__ &&handle_pt_cyc,          // 00100011 23
+		__extension__ &&handle_pt_tnt8,         // 00100100 24
+		__extension__ &&handle_pt_error,                // 00100101 25
+		__extension__ &&handle_pt_tnt8,         // 00100110 26
+		__extension__ &&handle_pt_cyc,          // 00100111 27
+		__extension__ &&handle_pt_tnt8,         // 00101000 28
+		__extension__ &&handle_pt_error,                // 00101001 29
+		__extension__ &&handle_pt_tnt8,         // 00101010 2a
+		__extension__ &&handle_pt_cyc,          // 00101011 2b
+		__extension__ &&handle_pt_tnt8,         // 00101100 2c
+		__extension__ &&handle_pt_tip,          // 00101101 2d
+		__extension__ &&handle_pt_tnt8,         // 00101110 2e
+		__extension__ &&handle_pt_cyc,          // 00101111 2f
+		__extension__ &&handle_pt_tnt8,         // 00110000 30
+		__extension__ &&handle_pt_tip_pge,      // 00110001 31
+		__extension__ &&handle_pt_tnt8,         // 00110010 32
+		__extension__ &&handle_pt_cyc,          // 00110011 33
+		__extension__ &&handle_pt_tnt8,         // 00110100 34
+		__extension__ &&handle_pt_error,                // 00110101 35
+		__extension__ &&handle_pt_tnt8,         // 00110110 36
+		__extension__ &&handle_pt_cyc,          // 00110111 37
+		__extension__ &&handle_pt_tnt8,         // 00111000 38
+		__extension__ &&handle_pt_error,                // 00111001 39
+		__extension__ &&handle_pt_tnt8,         // 00111010 3a
+		__extension__ &&handle_pt_cyc,          // 00111011 3b
+		__extension__ &&handle_pt_tnt8,         // 00111100 3c
+		__extension__ &&handle_pt_tip_fup,      // 00111101 3d
+		__extension__ &&handle_pt_tnt8,         // 00111110 3e
+		__extension__ &&handle_pt_cyc,          // 00111111 3f
+		__extension__ &&handle_pt_tnt8,         // 01000000 40
+		__extension__ &&handle_pt_tip_pgd,      // 01000001 41
+		__extension__ &&handle_pt_tnt8,         // 01000010 42
+		__extension__ &&handle_pt_cyc,          // 01000011 43
+		__extension__ &&handle_pt_tnt8,         // 01000100 44
+		__extension__ &&handle_pt_error,                // 01000101 45
+		__extension__ &&handle_pt_tnt8,         // 01000110 46
+		__extension__ &&handle_pt_cyc,          // 01000111 47
+		__extension__ &&handle_pt_tnt8,         // 01001000 48
+		__extension__ &&handle_pt_error,                // 01001001 49
+		__extension__ &&handle_pt_tnt8,         // 01001010 4a
+		__extension__ &&handle_pt_cyc,          // 01001011 4b
+		__extension__ &&handle_pt_tnt8,         // 01001100 4c
+		__extension__ &&handle_pt_tip,          // 01001101 4d
+		__extension__ &&handle_pt_tnt8,         // 01001110 4e
+		__extension__ &&handle_pt_cyc,          // 01001111 4f
+		__extension__ &&handle_pt_tnt8,         // 01010000 50
+		__extension__ &&handle_pt_tip_pge,      // 01010001 51
+		__extension__ &&handle_pt_tnt8,         // 01010010 52
+		__extension__ &&handle_pt_cyc,          // 01010011 53
+		__extension__ &&handle_pt_tnt8,         // 01010100 54
+		__extension__ &&handle_pt_exit,         // 01010101 55
+		__extension__ &&handle_pt_tnt8,         // 01010110 56
+		__extension__ &&handle_pt_cyc,          // 01010111 57
+		__extension__ &&handle_pt_tnt8,         // 01011000 58
+		__extension__ &&handle_pt_mtc,          // 01011001 59
+		__extension__ &&handle_pt_tnt8,         // 01011010 5a
+		__extension__ &&handle_pt_cyc,          // 01011011 5b
+		__extension__ &&handle_pt_tnt8,         // 01011100 5c
+		__extension__ &&handle_pt_tip_fup,      // 01011101 5d
+		__extension__ &&handle_pt_tnt8,         // 01011110 5e
+		__extension__ &&handle_pt_cyc,          // 01011111 5f
+		__extension__ &&handle_pt_tnt8,         // 01100000 60
+		__extension__ &&handle_pt_tip_pgd,      // 01100001 61
+		__extension__ &&handle_pt_tnt8,         // 01100010 62
+		__extension__ &&handle_pt_cyc,          // 01100011 63
+		__extension__ &&handle_pt_tnt8,         // 01100100 64
+		__extension__ &&handle_pt_error,                // 01100101 65
+		__extension__ &&handle_pt_tnt8,         // 01100110 66
+		__extension__ &&handle_pt_cyc,          // 01100111 67
+		__extension__ &&handle_pt_tnt8,         // 01101000 68
+		__extension__ &&handle_pt_error,                // 01101001 69
+		__extension__ &&handle_pt_tnt8,         // 01101010 6a
+		__extension__ &&handle_pt_cyc,          // 01101011 6b
+		__extension__ &&handle_pt_tnt8,         // 01101100 6c
+		__extension__ &&handle_pt_tip,          // 01101101 6d
+		__extension__ &&handle_pt_tnt8,         // 01101110 6e
+		__extension__ &&handle_pt_cyc,          // 01101111 6f
+		__extension__ &&handle_pt_tnt8,         // 01110000 70
+		__extension__ &&handle_pt_tip_pge,      // 01110001 71
+		__extension__ &&handle_pt_tnt8,         // 01110010 72
+		__extension__ &&handle_pt_cyc,          // 01110011 73
+		__extension__ &&handle_pt_tnt8,         // 01110100 74
+		__extension__ &&handle_pt_error,                // 01110101 75
+		__extension__ &&handle_pt_tnt8,         // 01110110 76
+		__extension__ &&handle_pt_cyc,          // 01110111 77
+		__extension__ &&handle_pt_tnt8,         // 01111000 78
+		__extension__ &&handle_pt_error,                // 01111001 79
+		__extension__ &&handle_pt_tnt8,         // 01111010 7a
+		__extension__ &&handle_pt_cyc,          // 01111011 7b
+		__extension__ &&handle_pt_tnt8,         // 01111100 7c
+		__extension__ &&handle_pt_tip_fup,      // 01111101 7d
+		__extension__ &&handle_pt_tnt8,         // 01111110 7e
+		__extension__ &&handle_pt_cyc,          // 01111111 7f
+		__extension__ &&handle_pt_tnt8,         // 10000000 80
+		__extension__ &&handle_pt_tip_pgd,      // 10000001 81
+		__extension__ &&handle_pt_tnt8,         // 10000010 82
+		__extension__ &&handle_pt_cyc,          // 10000011 83
+		__extension__ &&handle_pt_tnt8,         // 10000100 84
+		__extension__ &&handle_pt_error,                // 10000101 85
+		__extension__ &&handle_pt_tnt8,         // 10000110 86
+		__extension__ &&handle_pt_cyc,          // 10000111 87
+		__extension__ &&handle_pt_tnt8,         // 10001000 88
+		__extension__ &&handle_pt_error,                // 10001001 89
+		__extension__ &&handle_pt_tnt8,         // 10001010 8a
+		__extension__ &&handle_pt_cyc,          // 10001011 8b
+		__extension__ &&handle_pt_tnt8,         // 10001100 8c
+		__extension__ &&handle_pt_tip,          // 10001101 8d
+		__extension__ &&handle_pt_tnt8,         // 10001110 8e
+		__extension__ &&handle_pt_cyc,          // 10001111 8f
+		__extension__ &&handle_pt_tnt8,         // 10010000 90
+		__extension__ &&handle_pt_tip_pge,      // 10010001 91
+		__extension__ &&handle_pt_tnt8,         // 10010010 92
+		__extension__ &&handle_pt_cyc,          // 10010011 93
+		__extension__ &&handle_pt_tnt8,         // 10010100 94
+		__extension__ &&handle_pt_error,                // 10010101 95
+		__extension__ &&handle_pt_tnt8,         // 10010110 96
+		__extension__ &&handle_pt_cyc,          // 10010111 97
+		__extension__ &&handle_pt_tnt8,         // 10011000 98
+		__extension__ &&handle_pt_mode,         // 10011001 99
+		__extension__ &&handle_pt_tnt8,         // 10011010 9a
+		__extension__ &&handle_pt_cyc,          // 10011011 9b
+		__extension__ &&handle_pt_tnt8,         // 10011100 9c
+		__extension__ &&handle_pt_tip_fup,      // 10011101 9d
+		__extension__ &&handle_pt_tnt8,         // 10011110 9e
+		__extension__ &&handle_pt_cyc,          // 10011111 9f
+		__extension__ &&handle_pt_tnt8,         // 10100000 a0
+		__extension__ &&handle_pt_tip_pgd,      // 10100001 a1
+		__extension__ &&handle_pt_tnt8,         // 10100010 a2
+		__extension__ &&handle_pt_cyc,          // 10100011 a3
+		__extension__ &&handle_pt_tnt8,         // 10100100 a4
+		__extension__ &&handle_pt_error,                // 10100101 a5
+		__extension__ &&handle_pt_tnt8,         // 10100110 a6
+		__extension__ &&handle_pt_cyc,          // 10100111 a7
+		__extension__ &&handle_pt_tnt8,         // 10101000 a8
+		__extension__ &&handle_pt_error,                // 10101001 a9
+		__extension__ &&handle_pt_tnt8,         // 10101010 aa
+		__extension__ &&handle_pt_cyc,          // 10101011 ab
+		__extension__ &&handle_pt_tnt8,         // 10101100 ac
+		__extension__ &&handle_pt_tip,          // 10101101 ad
+		__extension__ &&handle_pt_tnt8,         // 10101110 ae
+		__extension__ &&handle_pt_cyc,          // 10101111 af
+		__extension__ &&handle_pt_tnt8,         // 10110000 b0
+		__extension__ &&handle_pt_tip_pge,      // 10110001 b1
+		__extension__ &&handle_pt_tnt8,         // 10110010 b2
+		__extension__ &&handle_pt_cyc,          // 10110011 b3
+		__extension__ &&handle_pt_tnt8,         // 10110100 b4
+		__extension__ &&handle_pt_error,                // 10110101 b5
+		__extension__ &&handle_pt_tnt8,         // 10110110 b6
+		__extension__ &&handle_pt_cyc,          // 10110111 b7
+		__extension__ &&handle_pt_tnt8,         // 10111000 b8
+		__extension__ &&handle_pt_error,                // 10111001 b9
+		__extension__ &&handle_pt_tnt8,         // 10111010 ba
+		__extension__ &&handle_pt_cyc,          // 10111011 bb
+		__extension__ &&handle_pt_tnt8,         // 10111100 bc
+		__extension__ &&handle_pt_tip_fup,      // 10111101 bd
+		__extension__ &&handle_pt_tnt8,         // 10111110 be
+		__extension__ &&handle_pt_cyc,          // 10111111 bf
+		__extension__ &&handle_pt_tnt8,         // 11000000 c0
+		__extension__ &&handle_pt_tip_pgd,      // 11000001 c1
+		__extension__ &&handle_pt_tnt8,         // 11000010 c2
+		__extension__ &&handle_pt_cyc,          // 11000011 c3
+		__extension__ &&handle_pt_tnt8,         // 11000100 c4
+		__extension__ &&handle_pt_error,                // 11000101 c5
+		__extension__ &&handle_pt_tnt8,         // 11000110 c6
+		__extension__ &&handle_pt_cyc,          // 11000111 c7
+		__extension__ &&handle_pt_tnt8,         // 11001000 c8
+		__extension__ &&handle_pt_error,                // 11001001 c9
+		__extension__ &&handle_pt_tnt8,         // 11001010 ca
+		__extension__ &&handle_pt_cyc,          // 11001011 cb
+		__extension__ &&handle_pt_tnt8,         // 11001100 cc
+		__extension__ &&handle_pt_tip,          // 11001101 cd
+		__extension__ &&handle_pt_tnt8,         // 11001110 ce
+		__extension__ &&handle_pt_cyc,          // 11001111 cf
+		__extension__ &&handle_pt_tnt8,         // 11010000 d0
+		__extension__ &&handle_pt_tip_pge,      // 11010001 d1
+		__extension__ &&handle_pt_tnt8,         // 11010010 d2
+		__extension__ &&handle_pt_cyc,          // 11010011 d3
+		__extension__ &&handle_pt_tnt8,         // 11010100 d4
+		__extension__ &&handle_pt_error,                // 11010101 d5
+		__extension__ &&handle_pt_tnt8,         // 11010110 d6
+		__extension__ &&handle_pt_cyc,          // 11010111 d7
+		__extension__ &&handle_pt_tnt8,         // 11011000 d8
+		__extension__ &&handle_pt_error,                // 11011001 d9
+		__extension__ &&handle_pt_tnt8,         // 11011010 da
+		__extension__ &&handle_pt_cyc,          // 11011011 db
+		__extension__ &&handle_pt_tnt8,         // 11011100 dc
+		__extension__ &&handle_pt_tip_fup,      // 11011101 dd
+		__extension__ &&handle_pt_tnt8,         // 11011110 de
+		__extension__ &&handle_pt_cyc,          // 11011111 df
+		__extension__ &&handle_pt_tnt8,         // 11100000 e0
+		__extension__ &&handle_pt_tip_pgd,      // 11100001 e1
+		__extension__ &&handle_pt_tnt8,         // 11100010 e2
+		__extension__ &&handle_pt_cyc,          // 11100011 e3
+		__extension__ &&handle_pt_tnt8,         // 11100100 e4
+		__extension__ &&handle_pt_error,                // 11100101 e5
+		__extension__ &&handle_pt_tnt8,         // 11100110 e6
+		__extension__ &&handle_pt_cyc,          // 11100111 e7
+		__extension__ &&handle_pt_tnt8,         // 11101000 e8
+		__extension__ &&handle_pt_error,                // 11101001 e9
+		__extension__ &&handle_pt_tnt8,         // 11101010 ea
+		__extension__ &&handle_pt_cyc,          // 11101011 eb
+		__extension__ &&handle_pt_tnt8,         // 11101100 ec
+		__extension__ &&handle_pt_tip,          // 11101101 ed
+		__extension__ &&handle_pt_tnt8,         // 11101110 ee
+		__extension__ &&handle_pt_cyc,          // 11101111 ef
+		__extension__ &&handle_pt_tnt8,         // 11110000 f0
+		__extension__ &&handle_pt_tip_pge,      // 11110001 f1
+		__extension__ &&handle_pt_tnt8,         // 11110010 f2
+		__extension__ &&handle_pt_cyc,          // 11110011 f3
+		__extension__ &&handle_pt_tnt8,         // 11110100 f4
+		__extension__ &&handle_pt_error,                // 11110101 f5
+		__extension__ &&handle_pt_tnt8,         // 11110110 f6
+		__extension__ &&handle_pt_cyc,          // 11110111 f7
+		__extension__ &&handle_pt_tnt8,         // 11111000 f8
+		__extension__ &&handle_pt_error,                // 11111001 f9
+		__extension__ &&handle_pt_tnt8,         // 11111010 fa
+		__extension__ &&handle_pt_cyc,          // 11111011 fb
+		__extension__ &&handle_pt_tnt8,         // 11111100 fc
+		__extension__ &&handle_pt_tip_fup,      // 11111101 fd
+		__extension__ &&handle_pt_tnt8,         // 11111110 fe
+		__extension__ &&handle_pt_error,                // 11111111 ff
 	};
 
 	#define DISPATCH_L1() /*printf("-> %p -> %x\n", p, p[0]);*/ goto *dispatch_table_level_1[p[0]]
@@ -776,7 +776,7 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 	flush_log(self);
 #endif
 
-	p = memmem(p, end - p, psb, PT_PKT_PSB_LEN);
+	p = memmem(p, end - p, psb, PT_PKT_PSB_LEN);	// TODO: we don't have psb at the beginning, disable this
 	if (!p) {
 		p = end;
 		goto handle_pt_exit;

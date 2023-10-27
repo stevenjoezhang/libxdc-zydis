@@ -79,6 +79,11 @@ typedef struct fuzz_bitmap_s {
 	uint32_t bitmap_size;
 } fuzz_bitmap_t;
 
+typedef struct fuzz_kcov_s {
+	uint8_t* data;
+	uint32_t size;
+} fuzz_kcov_t;
+
 typedef struct{
 	uint16_t opcode;
 	uint8_t modrm;
@@ -214,13 +219,25 @@ typedef enum decoder_result_s {
 	decoder_unkown_packet,
 } decoder_result_t;
 
+typedef struct libxdc_config_s {
+	uint64_t filter[4][2];
+	void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*);
+	void* page_cache_fetch_opaque;
+	bool output_enable_bitmap;
+	bool output_enable_kcov;
+	void* bitmap_ptr;
+	size_t bitmap_size;
+	void* kcov_data_ptr;
+	size_t kcov_data_size;
+} libxdc_config_t;
 
 typedef struct libxdc_s {
 	fuzz_bitmap_t* fuzz_bitmap;
-  decoder_t* decoder;
-  disassembler_t* disassembler;
+	fuzz_kcov_t* fuzz_kcov;
+	decoder_t* decoder;
+	disassembler_t* disassembler;
 
-  uint64_t trace_regions[4][2];
+	uint64_t trace_regions[4][2];
 } libxdc_t;
 
 #ifdef DEBUG_TRACES

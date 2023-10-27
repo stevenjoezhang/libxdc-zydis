@@ -87,6 +87,14 @@ fuzz_bitmap_t* net_fuzz_bitmap(uint8_t* bitmap, uint32_t bitmap_size){
 	return self;
 }
 
+fuzz_kcov_t* kcov_result_init(uint8_t* data_ptr, uint32_t size){
+	fuzz_kcov_t* self = malloc(sizeof(fuzz_kcov_t));
+	self->data = data_ptr;
+	self->size = size;
+	return self;
+}
+
+
 void add_result_tracelet_cache(tracelet_cache_tmp_t* self, uint64_t from, uint64_t to, fuzz_bitmap_t* fuzz_bitmap){
 	assert(self->cache.result_bits < self->cache.result_bits_max);
 

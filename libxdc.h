@@ -48,11 +48,23 @@ typedef enum disassembler_mode_s {
 	mode_64,
 } disassembler_mode_t;
 
+typedef struct libxdc_config_s {
+	uint64_t filter[4][2];
+	void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*);
+	void* page_cache_fetch_opaque;
+	bool output_enable_bitmap;
+	bool output_enable_kcov;
+	void* bitmap_ptr;
+	size_t bitmap_size;
+	void* kcov_data_ptr;
+	size_t kcov_data_size;
+} libxdc_config_t;
+
 uint16_t libxdc_get_release_version(void);
 
 void libxdc_reset_trace_cache(libxdc_t* self);
 
-libxdc_t* libxdc_init(uint64_t filter[4][2], void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*), void* page_cache_fetch_opaque, void* bitmap_ptr, size_t bitmap_size);
+libxdc_t* libxdc_init(libxdc_config_t* config);
 decoder_result_t libxdc_decode(libxdc_t* self, uint8_t* data, size_t len);
 
 uint64_t libxdc_bitmap_get_hash(libxdc_t* self);
