@@ -121,7 +121,7 @@ __attribute__ ((visibility ("default"))) void libxdc_bitmap_reset(libxdc_t* self
 
 /* decode trace */
 __attribute__ ((visibility ("default"))) decoder_result_t libxdc_decode(libxdc_t* self, uint8_t* data, size_t len){
-  // assert(data[len] == 0x55);   // we don't have this signature
+  assert(data[len] == 0x55);
   return decode_buffer(self->decoder, data, len);
 }
 
