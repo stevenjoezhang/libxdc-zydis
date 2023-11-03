@@ -32,7 +32,7 @@ SOFTWARE.
 #include "trace_cache.h"
 #include "core.h"
 
-disassembler_t* init_disassembler(uint64_t filter[4][2], void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*), void* page_cache_fetch_opaque, fuzz_bitmap_t* fuzz_bitmap);
+disassembler_t* init_disassembler(uint64_t filter[4][2], void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*), void* page_cache_fetch_opaque, fuzz_bitmap_t* fuzz_bitmap, fuzz_signal_t* fuzz_signal);
 int get_capstone_mode(int word_width_in_bits);
  __attribute__((hot)) disas_result_t trace_disassembler(disassembler_t* self, uint64_t entry_point, uint64_t limit, tnt_cache_t* tnt_cache_state, uint64_t* failed_page, disassembler_mode_t mode);
 void destroy_disassembler(disassembler_t* self);

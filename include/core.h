@@ -79,10 +79,10 @@ typedef struct fuzz_bitmap_s {
 	uint32_t bitmap_size;
 } fuzz_bitmap_t;
 
-typedef struct fuzz_kcov_s {
-	uint8_t* data;
+typedef struct fuzz_signal_s {
+	uint32_t* data;
 	uint32_t size;
-} fuzz_kcov_t;
+} fuzz_signal_t;
 
 typedef struct{
 	uint16_t opcode;
@@ -124,6 +124,7 @@ typedef struct disassembler_s{
 	bool has_pending_indirect_branch;
 	uint64_t pending_indirect_branch_src;
 	fuzz_bitmap_t* fuzz_bitmap;
+	fuzz_signal_t* fuzz_signal;
 	trace_cache_t* trace_cache;
 
 	uint8_t disassemble_cache[32];
@@ -223,17 +224,15 @@ typedef struct libxdc_config_s {
 	uint64_t filter[4][2];
 	void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*);
 	void* page_cache_fetch_opaque;
-	bool output_enable_bitmap;
-	bool output_enable_kcov;
 	void* bitmap_ptr;
 	size_t bitmap_size;
-	void* kcov_data_ptr;
-	size_t kcov_data_size;
+	uint32_t* signal_ptr;
+	uint32_t signal_size;
 } libxdc_config_t;
 
 typedef struct libxdc_s {
 	fuzz_bitmap_t* fuzz_bitmap;
-	fuzz_kcov_t* fuzz_kcov;
+	fuzz_signal_t* fuzz_signal;
 	decoder_t* decoder;
 	disassembler_t* disassembler;
 

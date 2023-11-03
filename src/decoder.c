@@ -224,6 +224,7 @@ void pt_decoder_flush(decoder_t* self){
 #endif
 
 	tnt_cache_flush(self->tnt_cache_state);
+	
 	decoder_statemachine_reset(self->decoder_state);
 	self->decoder_state_result->start = 0;
 	self->decoder_state_result->valid = 0;

@@ -48,6 +48,7 @@ __attribute__ ((visibility ("default")))  uint16_t libxdc_get_release_version(vo
 
 __attribute__ ((visibility ("default")))  void libxdc_reset_trace_cache(libxdc_t* self){
   reset_trace_cache(self->disassembler);
+  // signal_dedup_flush(self->disassembler);
 }
 
 /*
@@ -57,15 +58,19 @@ __attribute__ ((visibility ("default")))  libxdc_t* libxdc_init(libxdc_config_t*
   libxdc_t* self = malloc(sizeof(libxdc_t));
   memset(self, 0, sizeof(libxdc_t));
 
-  if (config->output_enable_bitmap) {
-    self->fuzz_bitmap = net_fuzz_bitmap(config->bitmap_ptr, config->bitmap_size);
-  } 
-  if (config->output_enable_kcov) {
-    self->fuzz_kcov = kcov_result_init(config->kcov_data_ptr, config->kcov_data_size);
+  assert(config->bitmap_size);
+  if (!config->bitmap_ptr)
+    LOGGER("No bitmap provided, disable bitmap output\n");
+  self->fuzz_bitmap = net_fuzz_bitmap(config->bitmap_ptr, config->bitmap_size);
+  if (config->signal_ptr) {
+    self->fuzz_signal = signal_result_init(config->signal_ptr, config->signal_size);
+  } else {
+    LOGGER("No signal space provided, disable signal output\n");
   }
   self->decoder = pt_decoder_init();
-  self->disassembler = init_disassembler(config->filter, config->page_cache_fetch_fptr, config->page_cache_fetch_opaque, self->fuzz_bitmap);
-
+  self->disassembler = init_disassembler(config->filter, config->page_cache_fetch_fptr, config->page_cache_fetch_opaque, self->fuzz_bitmap, self->fuzz_signal);
+  if (config->signal_ptr)
+    signal_dedup_flush(self->disassembler);
   if ( !self->disassembler )
   {
     libxdc_free(self);
@@ -122,7 +127,8 @@ __attribute__ ((visibility ("default"))) void libxdc_bitmap_reset(libxdc_t* self
 /* decode trace */
 __attribute__ ((visibility ("default"))) decoder_result_t libxdc_decode(libxdc_t* self, uint8_t* data, size_t len){
   assert(data[len] == 0x55);
-  return decode_buffer(self->decoder, data, len);
+  decoder_result_t res = decode_buffer(self->decoder, data, len);
+  // return decode_buffer(self->decoder, data, len);
 }
 
 /* get page fault addr */

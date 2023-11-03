@@ -52,12 +52,11 @@ typedef struct libxdc_config_s {
 	uint64_t filter[4][2];
 	void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*);
 	void* page_cache_fetch_opaque;
-	bool output_enable_bitmap;
-	bool output_enable_kcov;
 	void* bitmap_ptr;
 	size_t bitmap_size;
-	void* kcov_data_ptr;
-	size_t kcov_data_size;
+	// first size_t data used for storing signal count
+	uint32_t* signal_ptr;
+	uint32_t signal_size;
 } libxdc_config_t;
 
 uint16_t libxdc_get_release_version(void);
@@ -73,7 +72,7 @@ uint64_t libxdc_get_page_fault_addr(libxdc_t* self);
 void libxdc_free(libxdc_t* self);
 void libxdc_bitmap_reset(libxdc_t* self);
 
-void libxdc_register_bb_callback(libxdc_t* self,  void (*basic_block_callback)(void*, uint64_t, uint64_t), void* basic_block_callback_opaque);
+void libxdc_register_bb_callback(libxdc_t* self,  void (*basic_block_callback)(void*, disassembler_mode_t, uint64_t, uint64_t), void* basic_block_callback_opaque);
 void libxdc_register_edge_callback(libxdc_t* self,  void (*edge_callback)(void*, uint64_t, uint64_t), void* edge_callback_opaque);
 void libxdc_register_ip_callback(libxdc_t* self,  void (*ip_callback)(void*, uint64_t), void* ip_callback_opaque);
 

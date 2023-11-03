@@ -37,7 +37,7 @@ SOFTWARE.
 tracelet_cache_tmp_t* new_tracelet_cache(size_t bitmap_size);
 void tracelet_cache_tmp_destroy(tracelet_cache_tmp_t* self);
 void reset_tracelet_tmp_cache(tracelet_cache_tmp_t* self);
-void add_result_tracelet_cache(tracelet_cache_tmp_t* self, uint64_t from, uint64_t to, fuzz_bitmap_t* fuzz_bitmap);
+void add_result_tracelet_cache(tracelet_cache_tmp_t* self, uint64_t from, uint64_t to, fuzz_bitmap_t* fuzz_bitmap, fuzz_signal_t* fuzz_signal);
 void set_next_entry_addres_tracelet_cache(tracelet_cache_t* self, uint64_t next_entry_address);
 
 
@@ -54,6 +54,7 @@ uint32_t fuzz_bitmap_get_size(fuzz_bitmap_t* self);
 //void fuzz_bitmap_set_size(fuzz_bitmap_t self, uint32_t size);
 //void fuzz_bitmap_set_ptr(fuzz_bitmap_t self, void* ptr);
 void fuzz_bitmap_reset(fuzz_bitmap_t* self);
+void signal_dedup_flush(disassembler_t* self);
 uint64_t fuzz_bitmap_get_hash(fuzz_bitmap_t* self);
 void fuzz_bitmap_set(fuzz_bitmap_t* self, uint64_t from, uint64_t to);
 uint8_t* fuzz_bitmap_get_ptr(fuzz_bitmap_t* self);
@@ -65,5 +66,5 @@ void trace_cache_destroy(trace_cache_t* self);
 void trace_cache_add(trace_cache_t* self, trace_cache_key_t key, tracelet_cache_t* tracelet);
 tracelet_cache_t* trace_cache_fetch(trace_cache_t* self, trace_cache_key_t key);
 
-// kcov cache
-fuzz_kcov_t* kcov_result_init(uint8_t* data_ptr, uint32_t size);
+// signal cache
+fuzz_signal_t* signal_result_init(uint32_t* data_ptr, uint32_t size);

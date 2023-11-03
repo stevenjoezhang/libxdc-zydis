@@ -75,6 +75,36 @@ static inline uint64_t mix_bits(uint64_t v) {
   return v;
 }
 
+#define dedup_table_size 8 << 10
+uint32_t dedup_table[dedup_table_size];
+
+// Poorman's best-effort hashmap-based deduplication.
+// The hashmap is global which means that we deduplicate across different calls.
+// This is OK because we are interested only in new signals.
+static bool dedup(uint32_t sig)
+{
+	for (uint32_t i = 0; i < 4; i++) {
+		uint32_t pos = (sig + i) % dedup_table_size;
+		if (dedup_table[pos] == sig)
+			return true;
+		if (dedup_table[pos] == 0) {
+			dedup_table[pos] = sig;
+			return false;
+		}
+	}
+	dedup_table[sig % dedup_table_size] = sig;
+	return false;
+}
+
+static inline uint32_t hash(uint32_t a) {
+	a = (a ^ 61) ^ (a >> 16);
+	a = a + (a << 3);
+	a = a ^ (a >> 4);
+	a = a * 0x27d4eb2d;
+	a = a ^ (a >> 15);
+	return a;
+}
+
 static uint32_t generate_result_offset(uint64_t from, uint64_t to){
 	uint32_t transition_value = mix_bits(to)^(mix_bits(from)>>1);
 	return transition_value;
@@ -87,15 +117,15 @@ fuzz_bitmap_t* net_fuzz_bitmap(uint8_t* bitmap, uint32_t bitmap_size){
 	return self;
 }
 
-fuzz_kcov_t* kcov_result_init(uint8_t* data_ptr, uint32_t size){
-	fuzz_kcov_t* self = malloc(sizeof(fuzz_kcov_t));
+fuzz_signal_t* signal_result_init(uint32_t* data_ptr, uint32_t size){
+	fuzz_signal_t* self = malloc(sizeof(fuzz_signal_t));
 	self->data = data_ptr;
 	self->size = size;
 	return self;
 }
 
 
-void add_result_tracelet_cache(tracelet_cache_tmp_t* self, uint64_t from, uint64_t to, fuzz_bitmap_t* fuzz_bitmap){
+void add_result_tracelet_cache(tracelet_cache_tmp_t* self, uint64_t from, uint64_t to, fuzz_bitmap_t* fuzz_bitmap, fuzz_signal_t* fuzz_signal){
 	assert(self->cache.result_bits < self->cache.result_bits_max);
 
 	uint32_t offset = generate_result_offset(from, to) & (fuzz_bitmap->bitmap_size-1);
@@ -105,6 +135,21 @@ void add_result_tracelet_cache(tracelet_cache_tmp_t* self, uint64_t from, uint64
 	}
 
 	//fprintf(stderr, "-> %lx %d\n", offset, self->cache.result_bits);
+	if (fuzz_signal) {
+		// printf("New Edge: %llx -> %llx\n", from, to);
+		// debug print edge endpoint in addr2line format
+		// fprintf(stderr, "0x%llx\n", to);
+		uint32_t sig = (uint32_t)(to & 0xFFFFF000);
+		sig |= (uint32_t)((to & 0xFFF) ^ (hash((uint32_t)(from ^ 0xFFF)) & 0xFFF));
+		if (!dedup(sig)) {
+			uint32_t* sig_count = (uint32_t*)fuzz_signal->data;
+			if ((*sig_count) + 1 < fuzz_signal->size) {
+				*sig_count += 1;
+				fuzz_signal->data[*sig_count] = sig;
+			} else
+				fprintf(stderr, "Error: signal buffer too small\n");
+		}
+	}
 
 	self->lookup_bitmap[offset]++;
 	self->cache.tnt_bits++;
@@ -140,8 +185,19 @@ void tracelet_cache_destroy(tracelet_cache_t* self){
 	free(self);
 }
 
+void signal_dedup_flush(disassembler_t* self){
+	if(self->fuzz_signal){
+		memset(dedup_table, 0x0, sizeof(dedup_table));
+	}
+}
+
 uint64_t apply_trace_cache_to_bitmap(tracelet_cache_t* self, tnt_cache_t* tnt_cache_state, bool adjust, fuzz_bitmap_t* fuzz_bitmap){
-	
+	if (!fuzz_bitmap->bitmap) {
+		if (adjust) {
+			adjust_tnt_cache(tnt_cache_state, self->tnt_bits);
+		}
+		return self->next_entry_address;
+	}
 	for(uint8_t i = 0; i < self->result_bits; i++){
 		
 		uint8_t result = self->bitmap_results[i] >> 24;
@@ -162,7 +218,7 @@ uint32_t fuzz_bitmap_get_size(fuzz_bitmap_t* self){
 }
 
 void fuzz_bitmap_reset(fuzz_bitmap_t* self){
-	if(self){
+	if(self && self->bitmap){
     //fprintf(stderr, "%s: %lx %lx\n", __func__, fuzz_bitmap, fuzz_bitmap_size);
 		memset(self->bitmap, 0x00, self->bitmap_size);
 	}
