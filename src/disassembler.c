@@ -348,6 +348,7 @@ disassembler_t* init_disassembler(uint64_t filter[4][2], void* (*page_cache_fetc
 	//res->code = code;
 	self->infinite_loop_found = false;
 	self->debug = false;
+	self->signal_overflow = false;
 
 	/* check me */
 	self->has_pending_indirect_branch = false;
@@ -487,7 +488,7 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 			self->trace_edge_callback(self->trace_edge_callback_opaque, self->pending_indirect_branch_src, target_ip);
 		}
 		if(!trace_mode){
-			add_result_tracelet_cache(self->trace_cache->trace_cache, self->pending_indirect_branch_src, target_ip, self->fuzz_bitmap, self->fuzz_signal);
+			add_result_tracelet_cache(self->trace_cache->trace_cache, self->pending_indirect_branch_src, target_ip, self->fuzz_bitmap, self->fuzz_signal, &self->signal_overflow);
 		}
   }
 }
@@ -560,7 +561,7 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 				if(unlikely(trace_mode)){
 					self->trace_edge_callback(self->trace_edge_callback_opaque,  self->cfg.cofi_addr[nid], self->cfg.br1_addr[nid] );
 				} else {
-					add_result_tracelet_cache(self->trace_cache->trace_cache, self->cfg.cofi_addr[nid], self->cfg.br1_addr[nid] , self->fuzz_bitmap, self->fuzz_signal);
+					add_result_tracelet_cache(self->trace_cache->trace_cache, self->cfg.cofi_addr[nid], self->cfg.br1_addr[nid] , self->fuzz_bitmap, self->fuzz_signal, &self->signal_overflow);
 				}
 				nid = get_node_br1(self,  nid, tnt_cache_state, failed_page, mode);
 				loop = 0;
@@ -573,7 +574,7 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 				if(unlikely(trace_mode)){
 					self->trace_edge_callback(self->trace_edge_callback_opaque, self->cfg.cofi_addr[nid], self->cfg.br2_addr[nid]);
 				} else {
-					add_result_tracelet_cache(self->trace_cache->trace_cache, self->cfg.cofi_addr[nid], self->cfg.br2_addr[nid] , self->fuzz_bitmap, self->fuzz_signal);
+					add_result_tracelet_cache(self->trace_cache->trace_cache, self->cfg.cofi_addr[nid], self->cfg.br2_addr[nid] , self->fuzz_bitmap, self->fuzz_signal, &self->signal_overflow);
 				}
 				nid = get_node_br2(self, nid, tnt_cache_state, failed_page, mode);
 				loop = 0;

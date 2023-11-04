@@ -98,6 +98,7 @@ typedef enum disas_result_s {
 	disas_out_of_bounds,
 	disas_infinite_loop,
 	disas_page_fault,
+	disas_signal_ovf,
 } disas_result_t;
 
 
@@ -134,6 +135,7 @@ typedef struct disassembler_s{
 	csh handle_64;
 
 	bool trace_mode;
+	bool signal_overflow;
 
 	void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*);
 	void* page_cache_fetch_opaque;

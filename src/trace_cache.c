@@ -120,12 +120,12 @@ fuzz_bitmap_t* net_fuzz_bitmap(uint8_t* bitmap, uint32_t bitmap_size){
 fuzz_signal_t* signal_result_init(uint32_t* data_ptr, uint32_t size){
 	fuzz_signal_t* self = malloc(sizeof(fuzz_signal_t));
 	self->data = data_ptr;
-	self->size = size;
+	self->size = size / sizeof(uint32_t);
 	return self;
 }
 
 
-void add_result_tracelet_cache(tracelet_cache_tmp_t* self, uint64_t from, uint64_t to, fuzz_bitmap_t* fuzz_bitmap, fuzz_signal_t* fuzz_signal){
+void add_result_tracelet_cache(tracelet_cache_tmp_t* self, uint64_t from, uint64_t to, fuzz_bitmap_t* fuzz_bitmap, fuzz_signal_t* fuzz_signal, bool* signal_overflow){
 	assert(self->cache.result_bits < self->cache.result_bits_max);
 
 	uint32_t offset = generate_result_offset(from, to) & (fuzz_bitmap->bitmap_size-1);
@@ -146,8 +146,12 @@ void add_result_tracelet_cache(tracelet_cache_tmp_t* self, uint64_t from, uint64
 			if ((*sig_count) + 1 < fuzz_signal->size) {
 				*sig_count += 1;
 				fuzz_signal->data[*sig_count] = sig;
-			} else
-				fprintf(stderr, "Error: signal buffer too small\n");
+			} else {
+				if (!*signal_overflow) {
+					*signal_overflow = true;
+					fprintf(stderr, "libxdc: warning: signal buffer too small\n");
+				}
+			}
 		}
 	}
 

@@ -37,7 +37,7 @@ SOFTWARE.
 tracelet_cache_tmp_t* new_tracelet_cache(size_t bitmap_size);
 void tracelet_cache_tmp_destroy(tracelet_cache_tmp_t* self);
 void reset_tracelet_tmp_cache(tracelet_cache_tmp_t* self);
-void add_result_tracelet_cache(tracelet_cache_tmp_t* self, uint64_t from, uint64_t to, fuzz_bitmap_t* fuzz_bitmap, fuzz_signal_t* fuzz_signal);
+void add_result_tracelet_cache(tracelet_cache_tmp_t* self, uint64_t from, uint64_t to, fuzz_bitmap_t* fuzz_bitmap, fuzz_signal_t* fuzz_signal, bool* signal_overflow);
 void set_next_entry_addres_tracelet_cache(tracelet_cache_t* self, uint64_t next_entry_address);
 
 
