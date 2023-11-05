@@ -187,6 +187,7 @@ typedef struct decoder_s{
 	should_disasm_t* decoder_state_result;
 	disassembler_mode_t mode;
 	int error_counter;
+	bool flag_align_psb;
 
 	void (*ip_callback)(void*, uint64_t);
 	void* ip_callback_opaque;
@@ -230,6 +231,7 @@ typedef struct libxdc_config_s {
 	size_t bitmap_size;
 	uint32_t* signal_ptr;
 	uint32_t signal_size;
+	bool align_psb;
 } libxdc_config_t;
 
 typedef struct libxdc_s {

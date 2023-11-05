@@ -181,7 +181,7 @@ static void flush_log(decoder_t* self){
 }
 #endif
 
-decoder_t* pt_decoder_init(){
+decoder_t* pt_decoder_init(bool align_psb){
 	decoder_t* res = calloc(1, sizeof(decoder_t));
 
 #ifdef DECODER_LOG
@@ -196,6 +196,7 @@ decoder_t* pt_decoder_init(){
 	res->decoder_state_result->valid = 0;
 	res->decoder_state_result->valid = false;
 	res->mode = mode_64;
+	res->flag_align_psb = align_psb;
 
 	return res;
 }
@@ -777,7 +778,8 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 	flush_log(self);
 #endif
 
-	// p = memmem(p, end - p, psb, PT_PKT_PSB_LEN);	// We don't have psb at the beginning, disable this
+	if (self->flag_align_psb)	// if ipt trace is enabled multiple times, the PSB will not be aligned
+		p = memmem(p, end - p, psb, PT_PKT_PSB_LEN);
 	if (!p) {
 		p = end;
 		goto handle_pt_exit;

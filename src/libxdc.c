@@ -67,7 +67,7 @@ __attribute__ ((visibility ("default")))  libxdc_t* libxdc_init(libxdc_config_t*
   } else {
     LOGGER("No signal space provided, disable signal output\n");
   }
-  self->decoder = pt_decoder_init();
+  self->decoder = pt_decoder_init(config->align_psb);
   self->disassembler = init_disassembler(config->filter, config->page_cache_fetch_fptr, config->page_cache_fetch_opaque, self->fuzz_bitmap, self->fuzz_signal);
   if (config->signal_ptr)
     signal_dedup_flush(self->disassembler);

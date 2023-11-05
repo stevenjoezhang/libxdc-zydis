@@ -57,6 +57,7 @@ typedef struct libxdc_config_s {
 	// first size_t data used for storing signal count
 	uint32_t* signal_ptr;
 	uint32_t signal_size;
+	bool align_psb;
 } libxdc_config_t;
 
 uint16_t libxdc_get_release_version(void);
