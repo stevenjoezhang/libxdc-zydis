@@ -777,7 +777,7 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 	flush_log(self);
 #endif
 
-	p = memmem(p, end - p, psb, PT_PKT_PSB_LEN);	// TODO: we don't have psb at the beginning, disable this
+	// p = memmem(p, end - p, psb, PT_PKT_PSB_LEN);	// We don't have psb at the beginning, disable this
 	if (!p) {
 		p = end;
 		goto handle_pt_exit;
