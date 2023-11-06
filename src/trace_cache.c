@@ -76,7 +76,7 @@ static inline uint64_t mix_bits(uint64_t v) {
 }
 
 #define dedup_table_size 8 << 10
-uint32_t dedup_table[dedup_table_size];
+uint32_t dedup_table_ipt[dedup_table_size];
 
 // Poorman's best-effort hashmap-based deduplication.
 // The hashmap is global which means that we deduplicate across different calls.
@@ -85,14 +85,14 @@ static bool dedup(uint32_t sig)
 {
 	for (uint32_t i = 0; i < 4; i++) {
 		uint32_t pos = (sig + i) % dedup_table_size;
-		if (dedup_table[pos] == sig)
+		if (dedup_table_ipt[pos] == sig)
 			return true;
-		if (dedup_table[pos] == 0) {
-			dedup_table[pos] = sig;
+		if (dedup_table_ipt[pos] == 0) {
+			dedup_table_ipt[pos] = sig;
 			return false;
 		}
 	}
-	dedup_table[sig % dedup_table_size] = sig;
+	dedup_table_ipt[sig % dedup_table_size] = sig;
 	return false;
 }
 
@@ -191,7 +191,7 @@ void tracelet_cache_destroy(tracelet_cache_t* self){
 
 void signal_dedup_flush(disassembler_t* self){
 	if(self->fuzz_signal){
-		memset(dedup_table, 0x0, sizeof(dedup_table));
+		memset(dedup_table_ipt, 0x0, sizeof(dedup_table_ipt));
 	}
 }
 

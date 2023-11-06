@@ -36,10 +36,21 @@ aux_source_directory(${CMAKE_SOURCE_DIR}/src src_dir)
 
 set (HEADERS ${CMAKE_SOURCE_DIR}/libxdc.h)
 ADD_LIBRARY(xdc STATIC ${src_dir} ${HEADERS})
+ADD_LIBRARY(xdc_shared SHARED ${src_dir} ${HEADERS})
 
 set_target_properties(xdc PROPERTIES PUBLIC_HEADER ${HEADERS})
+
+set_target_properties(xdc_shared PROPERTIES OUTPUT_NAME "xdc")
 
 install(TARGETS xdc
 		ARCHIVE DESTINATION ${CMAKE_SOURCE_DIR}
  		LIBRARY DESTINATION ${CMAKE_SOURCE_DIR}
 		PUBLIC_HEADER DESTINATION /usr/include)
+
+install(TARGETS xdc
+		ARCHIVE DESTINATION /usr/local/lib
+ 		LIBRARY DESTINATION /usr/local/lib)
+
+install(TARGETS xdc_shared
+		ARCHIVE DESTINATION /usr/local/lib
+ 		LIBRARY DESTINATION /usr/local/lib)
