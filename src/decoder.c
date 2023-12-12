@@ -63,6 +63,10 @@ See: https://github.com/andikleen/simple-pt/blob/master/fastdecode.c
 #include "decoder.h"
 #include "mydbg.h"
 
+#ifdef WIN32
+#include <processthreadsapi.h>
+#endif
+
 #define BENCHMARK 				1
 
 
@@ -139,7 +143,39 @@ static decoder_state_machine_t* decoder_statemachine_new(void);
 static void decoder_statemachine_reset(decoder_state_machine_t* self);
 
 #ifdef WIN32
-static void* memmem(const void* haystack, size_t haystacklen, const void* needle, size_t needlelen) {
+#ifndef _vscprintf
+/* For some reason, MSVC fails to honour this #ifndef. */
+/* Hence function renamed to _vscprintf_so(). */
+int _vscprintf_so(const char * format, va_list pargs) {
+    int retval;
+    va_list argcopy;
+    va_copy(argcopy, pargs);
+    retval = vsnprintf(NULL, 0, format, argcopy);
+    va_end(argcopy);
+    return retval;}
+#endif // _vscprintf
+
+#ifndef vasprintf
+int vasprintf(char **strp, const char *fmt, va_list ap) {
+    int len = _vscprintf_so(fmt, ap);
+    if (len == -1) return -1;
+    char *str = malloc((size_t) len + 1);
+    if (!str) return -1;
+    int r = vsnprintf(str, len + 1, fmt, ap); /* "secure" version of vsprintf */
+    if (r == -1) return free(str), -1;
+    *strp = str;
+    return r;}
+#endif // vasprintf
+
+#ifndef asprintf
+int asprintf(char *strp[], const char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    int r = vasprintf(strp, fmt, ap);
+    va_end(ap);
+    return r;}
+#endif // asprintf
+static const void* memmem(const void* haystack, size_t haystacklen, const void* needle, size_t needlelen) {
 	if (needlelen > haystacklen) {
 		return NULL;
 	}
@@ -202,8 +238,9 @@ decoder_t* pt_decoder_init(bool align_psb){
 }
 
 void pt_decoder_destroy(decoder_t* self){
-    if ( !self )
+    if (!self) {
         return;
+	}
 
 	if(self->tnt_cache_state){
 		//destroy_disassembler(self->disassembler_state);
@@ -779,7 +816,7 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 #endif
 
 	if (self->flag_align_psb)	// if ipt trace is enabled multiple times, the PSB will not be aligned
-		p = memmem(p, end - p, psb, PT_PKT_PSB_LEN);
+		p = (uint8_t*)(p, end - p, psb, PT_PKT_PSB_LEN);
 	if (!p) {
 		p = end;
 		goto handle_pt_exit;
@@ -959,7 +996,11 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 		abort();
 
 		char* tmp;
+#ifdef WIN32
+		assert(asprintf(&tmp, "/tmp/loop_trace_%d_%d", (int)GetCurrentProcessId(), self->error_counter++) != -1);
+#else
 		assert(asprintf(&tmp, "/tmp/loop_trace_%d_%d", getpid(), self->error_counter++) != -1);
+#endif
 		FILE* f = fopen(tmp, "wb");
 							fwrite(map, len, 1, f);
 							fclose(f);

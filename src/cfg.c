@@ -83,14 +83,14 @@ void disassembler_cfg_inspect(disassembler_cfg_t* self, node_id_t nid){
             }else{
                 printf(" %d", self->br1[nid].node_id);
             }
-            printf("(0x%lx)",self->br1_addr[nid]);
+            printf("(0x%llx)",self->br1_addr[nid]);
             printf(", not_taken: ");
             if(self->br2[nid].node_id == NODE_NOT_DEFINED){
                 printf("(NODE_NOT_DEFINED)");
             }else{
                 printf(" %d", self->br2[nid].node_id);
             }
-            printf("(0x%lx)",self->br2_addr[nid]);
+            printf("(0x%llx)",self->br2_addr[nid]);
             break;
 	    case COFI_TYPE_UNCONDITIONAL_DIRECT_BRANCH:
             printf("NODE_UNCOND_DIRECT{ to: ");
@@ -99,7 +99,7 @@ void disassembler_cfg_inspect(disassembler_cfg_t* self, node_id_t nid){
             }else{
                 printf(" %d", self->br1[nid].node_id);
             }
-            printf("(0x%lx)",self->br1_addr[nid]);
+            printf("(0x%llx)",self->br1_addr[nid]);
             break;
 	    case COFI_TYPE_INDIRECT_BRANCH:
             printf("NODE_INDIRECT{ ");
@@ -118,7 +118,7 @@ void disassembler_cfg_inspect(disassembler_cfg_t* self, node_id_t nid){
         //INFINITE_LOOP,
         //PAGE_CACHE_FAILED,
     }
-    printf(" id: %d, at: 0x%lx, cofi_addr: 0x%lx }\n", nid, self->base_addr[nid], self->cofi_addr[nid]);
+    printf(" id: %d, at: 0x%llx, cofi_addr: 0x%llx }\n", nid, self->base_addr[nid], self->cofi_addr[nid]);
 }
 
 
