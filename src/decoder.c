@@ -816,7 +816,7 @@ __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* ma
 #endif
 
 	if (self->flag_align_psb)	// if ipt trace is enabled multiple times, the PSB will not be aligned
-		p = (uint8_t*)(p, end - p, psb, PT_PKT_PSB_LEN);
+		p = (uint8_t*)memmem(p, end - p, psb, PT_PKT_PSB_LEN);
 	if (!p) {
 		p = end;
 		goto handle_pt_exit;

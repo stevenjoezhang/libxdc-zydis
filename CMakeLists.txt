@@ -24,6 +24,10 @@ if (WINDOWS)
 	endif()
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -finline-functions -flto -Ofast")
 elseif (LINUX)
+	# bare ar do not support -lto, should use gcc-ar
+	SET(CMAKE_AR  "gcc-ar")
+	SET(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
+	SET(CMAKE_C_ARCHIVE_FINISH "true")
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -finline-functions -flto -fvisibility=hidden -fPIC")
 	# for optimize executable size
 	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections")
@@ -41,11 +45,13 @@ aux_source_directory(${CMAKE_SOURCE_DIR}/src src_dir)
 set (HEADERS ${CMAKE_SOURCE_DIR}/libxdc.h)
 ADD_LIBRARY(xdc STATIC ${src_dir} ${HEADERS})
 
-target_include_directories(xdc PUBLIC "C:/Program Files (x86)/capstone/include")
+if (WINDOWS)
+	target_include_directories(xdc PUBLIC "C:/Program Files (x86)/capstone/include")
+endif()
 
 set_target_properties(xdc PROPERTIES PUBLIC_HEADER ${HEADERS})
 
 install(TARGETS xdc
-		ARCHIVE DESTINATION ${CMAKE_SOURCE_DIR}
+		ARCHIVE DESTINATION /usr/local/lib
  		LIBRARY DESTINATION ${CMAKE_SOURCE_DIR}
 		PUBLIC_HEADER DESTINATION /usr/include)
