@@ -139,6 +139,7 @@ typedef struct disassembler_s{
 
 	void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*);
 	void* page_cache_fetch_opaque;
+	uint64_t (*kaslr_address_remapping)(uint64_t);
 
 	void (*trace_edge_callback)(void*, uint64_t, uint64_t);
 	void* trace_edge_callback_opaque;
@@ -227,6 +228,7 @@ typedef struct libxdc_config_s {
 	uint64_t filter[4][2];
 	void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*);
 	void* page_cache_fetch_opaque;
+	uint64_t (*kaslr_address_remapping)(uint64_t);
 	void* bitmap_ptr;
 	size_t bitmap_size;
 	uint32_t* signal_ptr;

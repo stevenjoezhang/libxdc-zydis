@@ -332,7 +332,7 @@ static node_id_t disassemble_bb(disassembler_t* self, uint64_t base_address, uin
 	return res_nid;
 }
 
-disassembler_t* init_disassembler(uint64_t filter[4][2], void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*), void* page_cache_fetch_opaque, fuzz_bitmap_t* fuzz_bitmap, fuzz_signal_t* fuzz_signal){
+disassembler_t* init_disassembler(uint64_t filter[4][2], void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*), void* page_cache_fetch_opaque, uint64_t (*kaslr_address_remapping)(uint64_t), fuzz_bitmap_t* fuzz_bitmap, fuzz_signal_t* fuzz_signal){
 	disassembler_t* self = malloc(sizeof(disassembler_t));
 
 	if ( !disassembler_cfg_init(&self->cfg, 0xfffff) )
@@ -344,6 +344,7 @@ disassembler_t* init_disassembler(uint64_t filter[4][2], void* (*page_cache_fetc
 
 	self->page_cache_fetch_fptr = page_cache_fetch_fptr;
 	self->page_cache_fetch_opaque = page_cache_fetch_opaque;
+	self->kaslr_address_remapping = kaslr_address_remapping;
 
 	//res->code = code;
 	self->infinite_loop_found = false;
@@ -484,11 +485,17 @@ static inline node_id_t get_node_br2(disassembler_t* self, node_id_t cur_nid, tn
 static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t target_ip, bool trace_mode){
   if(self->has_pending_indirect_branch){
 		self->has_pending_indirect_branch = false;
+		uint64_t from = self->pending_indirect_branch_src;
+		uint64_t to = target_ip;
+		if(self->kaslr_address_remapping){
+			from = (uint64_t)(self->kaslr_address_remapping)(from);
+			to = (uint64_t)(self->kaslr_address_remapping)(to);
+		}
 		if(trace_mode){
-			self->trace_edge_callback(self->trace_edge_callback_opaque, self->pending_indirect_branch_src, target_ip);
+			self->trace_edge_callback(self->trace_edge_callback_opaque, from, to);
 		}
 		if(!trace_mode){
-			add_result_tracelet_cache(self->trace_cache->trace_cache, self->pending_indirect_branch_src, target_ip, self->fuzz_bitmap, self->fuzz_signal, &self->signal_overflow);
+			add_result_tracelet_cache(self->trace_cache->trace_cache, from, to, self->fuzz_bitmap, self->fuzz_signal, &self->signal_overflow);
 		}
   }
 }
@@ -523,6 +530,7 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 
 	int loop = 0;
 	uint8_t dispatch_type = 0;
+	uint64_t from, to;
 	node_id_t nid = NODE_NOT_DEFINED;
 
 	inform_disassembler_target_ip(self, *entry_point, trace_mode);
@@ -558,10 +566,16 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 
 			case TAKEN:
 				// printf("taken 1\n");
+				from = self->cfg.cofi_addr[nid];
+				to = self->cfg.br1_addr[nid];
+				if(self->kaslr_address_remapping){
+					from = (uint64_t)(self->kaslr_address_remapping)(from);
+					to = (uint64_t)(self->kaslr_address_remapping)(to);
+				}
 				if(unlikely(trace_mode)){
-					self->trace_edge_callback(self->trace_edge_callback_opaque,  self->cfg.cofi_addr[nid], self->cfg.br1_addr[nid] );
+					self->trace_edge_callback(self->trace_edge_callback_opaque, from, to);
 				} else {
-					add_result_tracelet_cache(self->trace_cache->trace_cache, self->cfg.cofi_addr[nid], self->cfg.br1_addr[nid] , self->fuzz_bitmap, self->fuzz_signal, &self->signal_overflow);
+					add_result_tracelet_cache(self->trace_cache->trace_cache, from, to, self->fuzz_bitmap, self->fuzz_signal, &self->signal_overflow);
 				}
 				nid = get_node_br1(self,  nid, tnt_cache_state, failed_page, mode);
 				loop = 0;
@@ -571,10 +585,16 @@ static inline void inform_disassembler_target_ip(disassembler_t* self, uint64_t 
 
 			case NOT_TAKEN:
 				// printf("not_taken 1\n");
+				from = self->cfg.cofi_addr[nid];
+				to = self->cfg.br2_addr[nid];
+				if(self->kaslr_address_remapping){
+					from = (uint64_t)(self->kaslr_address_remapping)(from);
+					to = (uint64_t)(self->kaslr_address_remapping)(to);
+				}
 				if(unlikely(trace_mode)){
-					self->trace_edge_callback(self->trace_edge_callback_opaque, self->cfg.cofi_addr[nid], self->cfg.br2_addr[nid]);
+					self->trace_edge_callback(self->trace_edge_callback_opaque, from, to);
 				} else {
-					add_result_tracelet_cache(self->trace_cache->trace_cache, self->cfg.cofi_addr[nid], self->cfg.br2_addr[nid] , self->fuzz_bitmap, self->fuzz_signal, &self->signal_overflow);
+					add_result_tracelet_cache(self->trace_cache->trace_cache, from, to, self->fuzz_bitmap, self->fuzz_signal, &self->signal_overflow);
 				}
 				nid = get_node_br2(self, nid, tnt_cache_state, failed_page, mode);
 				loop = 0;
