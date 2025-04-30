@@ -27,7 +27,6 @@ SOFTWARE.
 
 #define UNMAPPED_PAGE 0xFFFFFFFFFFFFFFFFULL
 
-#define LOOKUP_TABLES		5
 #define IGN_MOD_RM			0
 #define IGN_OPODE_PREFIX	0
 #define MODRM_REG(x)		(x << 3)
@@ -42,97 +41,6 @@ bool limit_check(uint64_t bb_start, uint64_t bb_end, uint64_t limit_exit, uint64
 
 #define in_range(self, addr) (((addr > self->min_addr_0) && (addr < self->max_addr_0)) ||  ((addr > self->min_addr_1) && (addr < self->max_addr_1)) || ((addr > self->min_addr_2) && (addr < self->max_addr_2)) || ((addr > self->min_addr_3) && (addr < self->max_addr_3)))
 #define in_range_specific(addr, min, max) ((addr >= min) && (addr < max))
-
-/* http://stackoverflow.com/questions/29600668/what-meaning-if-any-does-the-mod-r-m-byte-carry-for-the-unconditional-jump-ins */
-/* conditional branch */
-cofi_ins cb_lookup[] = {
-	{ZYDIS_MNEMONIC_JNB,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_JNBE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_JBE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_JB,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_JCXZ,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_JECXZ,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_JZ,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_JNL,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {ZYDIS_MNEMONIC_JNLE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {ZYDIS_MNEMONIC_JLE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_JL,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {ZYDIS_MNEMONIC_JNZ,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {ZYDIS_MNEMONIC_JNO,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {ZYDIS_MNEMONIC_JNP,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {ZYDIS_MNEMONIC_JNS,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {ZYDIS_MNEMONIC_JO,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {ZYDIS_MNEMONIC_JP,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {ZYDIS_MNEMONIC_JRCXZ,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {ZYDIS_MNEMONIC_JS,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_LOOP,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_LOOPE,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_LOOPNE,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
-};
-
-/* unconditional direct branch */
-cofi_ins udb_lookup[] = {
-	{ZYDIS_MNEMONIC_JMP,		IGN_MOD_RM,	0xe9},
-	{ZYDIS_MNEMONIC_JMP,		IGN_MOD_RM, 0xeb},
-	{ZYDIS_MNEMONIC_CALL,	IGN_MOD_RM,	0xe8},
-};
-
-/* indirect branch */
-cofi_ins ib_lookup[] = {
-	{ZYDIS_MNEMONIC_JMP,		MODRM_REG(4),	0xff},
-	{ZYDIS_MNEMONIC_CALL,	MODRM_REG(2),	0xff},
-};
-
-/* near ret */
-cofi_ins nr_lookup[] = {
-	{ZYDIS_MNEMONIC_RET,		IGN_MOD_RM,	0xc3},
-	{ZYDIS_MNEMONIC_RET,		IGN_MOD_RM,	0xc2},
-};
-
-/* far transfers */
-cofi_ins ft_lookup[] = {
-	{ZYDIS_MNEMONIC_INT3,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_INT,				IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_INT1,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_INTO,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_IRET,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_IRETD,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_IRETQ,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_JMP,				IGN_MOD_RM,		0xea},
-	{ZYDIS_MNEMONIC_JMP,				MODRM_REG(5),	0xff},
-	{ZYDIS_MNEMONIC_CALL,			IGN_MOD_RM,		0x9a},
-	{ZYDIS_MNEMONIC_CALL,			MODRM_REG(3),	0xff},
-	{ZYDIS_MNEMONIC_RET,				IGN_MOD_RM,		0xcb},
-	{ZYDIS_MNEMONIC_RET,				IGN_MOD_RM,		0xca},
-	{ZYDIS_MNEMONIC_SYSCALL,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_SYSENTER,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_SYSEXIT,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_SYSRET,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_VMLAUNCH,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_VMRESUME,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_UD0, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_UD2, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
-	{ZYDIS_MNEMONIC_UD1, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
-
-};
-
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
-
-cofi_ins* lookup_tables[] = {
-	cb_lookup,
-	udb_lookup,
-	ib_lookup,
-	nr_lookup,
-	ft_lookup,
-};
-
-uint8_t lookup_table_sizes[] = {
-	ARRAY_SIZE(cb_lookup),
-	ARRAY_SIZE(udb_lookup),
-	ARRAY_SIZE(ib_lookup),
-	ARRAY_SIZE(nr_lookup),
-	ARRAY_SIZE(ft_lookup),
-};
 
 static bool disassembler_iter(disassembler_t* self, ZydisDecoderContext* ctx, uint64_t* address, ZydisDisassembledInstruction *insn, uint64_t* failed_page, ZydisDecoder* current_handle){
 
@@ -200,19 +108,68 @@ static bool disassembler_iter(disassembler_t* self, ZydisDecoderContext* ctx, ui
 /* ===== kAFL disassembler engine ===== */
 
 static cofi_type opcode_analyzer(ZydisDisassembledInstruction *insn){
-	uint8_t i, j;
-	//		printf("%lx (%d)\t%s\t%s\t\t\n", insn->runtime_address, i, insn->mnemonic, insn->text);
-	for (i = 0; i < LOOKUP_TABLES; i++){
-		for (j = 0; j < lookup_table_sizes[i]; j++){
-			if (insn->info.mnemonic == lookup_tables[i][j].opcode){
-				/* check MOD R/M and opcode prefix byte */
-				uint8_t reg_bits = insn->info.raw.modrm.reg << 3;
-				if ((lookup_tables[i][j].modrm == IGN_MOD_RM || lookup_tables[i][j].modrm == reg_bits) && (lookup_tables[i][j].opcode_prefix == IGN_OPODE_PREFIX || lookup_tables[i][j].opcode_prefix == insn->info.opcode))
-					return i;
+	switch (insn->info.meta.category) {
+		case ZYDIS_CATEGORY_COND_BR:
+			return COFI_TYPE_CONDITIONAL_BRANCH;
+		case ZYDIS_CATEGORY_UNCOND_BR:
+			switch (insn->info.opcode) {
+				case 0xff:
+					uint8_t reg_bits = insn->info.raw.modrm.reg << 3;
+					if (reg_bits == MODRM_REG(4))
+						return COFI_TYPE_INDIRECT_BRANCH;
+					else
+						return COFI_TYPE_FAR_TRANSFERS;
+				default:
+					return COFI_TYPE_UNCONDITIONAL_DIRECT_BRANCH;
 			}
-		}
+		case ZYDIS_CATEGORY_CALL:
+			switch (insn->info.opcode) {
+				case 0xe8:
+					return COFI_TYPE_UNCONDITIONAL_DIRECT_BRANCH;
+				case 0x9a:
+					return COFI_TYPE_FAR_TRANSFERS;
+				case 0xff:
+					uint8_t reg_bits = insn->info.raw.modrm.reg << 3;
+					if (reg_bits == MODRM_REG(2))
+						return COFI_TYPE_INDIRECT_BRANCH;
+					else
+						return COFI_TYPE_FAR_TRANSFERS;
+				case ZYDIS_BRANCH_TYPE_FAR:
+					return COFI_TYPE_FAR_TRANSFERS;
+				default:
+					return COFI_TYPE_INDIRECT_BRANCH;
+			}
+		case ZYDIS_CATEGORY_RET:
+			switch (insn->info.mnemonic) {
+				case ZYDIS_MNEMONIC_IRET:
+				case ZYDIS_MNEMONIC_IRETD:
+				case ZYDIS_MNEMONIC_IRETQ:
+					return COFI_TYPE_FAR_TRANSFERS;
+				default:
+					switch (insn->info.opcode) {
+						case 0xca:
+						case 0xcb:
+							return COFI_TYPE_FAR_TRANSFERS;
+						default:
+							return COFI_TYPE_NEAR_RET;
+					}
+			}
+		case ZYDIS_CATEGORY_INTERRUPT:
+		case ZYDIS_CATEGORY_SYSCALL:
+		case ZYDIS_CATEGORY_SYSRET:
+			return COFI_TYPE_FAR_TRANSFERS;
+		default:
+			switch (insn->info.mnemonic) {
+				case ZYDIS_MNEMONIC_VMLAUNCH:
+				case ZYDIS_MNEMONIC_VMRESUME:
+				case ZYDIS_MNEMONIC_UD0:
+				case ZYDIS_MNEMONIC_UD1:
+				case ZYDIS_MNEMONIC_UD2:
+					return COFI_TYPE_FAR_TRANSFERS;
+				default:
+					return NO_COFI_TYPE;
+			}
 	}
-	return NO_COFI_TYPE;
 }
 
 static node_id_t disassemble_bb(disassembler_t* self, uint64_t base_address, uint64_t limit, uint64_t* failed_page, disassembler_mode_t mode){
