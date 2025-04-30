@@ -29,8 +29,7 @@ SOFTWARE.
 #include <sys/stat.h>
 #include <stdbool.h>
 #include "khash.h"
-#include <capstone/capstone.h>
-#include <capstone/x86.h>
+#include <Zydis/Zydis.h>
 #include "tnt_cache.h"
 #include "cfg.h"
 
@@ -130,9 +129,9 @@ typedef struct disassembler_s{
 
 	uint8_t disassemble_cache[32];
 
-	csh handle_16;
-	csh handle_32;
-	csh handle_64;
+	ZydisDecoder decoder_16;
+	ZydisDecoder decoder_32;
+	ZydisDecoder decoder_64;
 
 	bool trace_mode;
 	bool signal_overflow;

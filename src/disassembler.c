@@ -25,18 +25,12 @@ SOFTWARE.
 #include "cfg.h"
 #include "mydbg.h"
 
-
-#if CS_API_MAJOR < 4
-#error Unsupported capstone version (capstone engine v4 is required)!
-#endif
-
 #define UNMAPPED_PAGE 0xFFFFFFFFFFFFFFFFULL
 
 #define LOOKUP_TABLES		5
 #define IGN_MOD_RM			0
 #define IGN_OPODE_PREFIX	0
 #define MODRM_REG(x)		(x << 3)
-#define MODRM_AND			__extension__ 0b00111000
 
 bool limit_check(uint64_t bb_start, uint64_t bb_end, uint64_t limit_exit, uint64_t entry) {
 	bool covers_exit = (bb_start <= limit_exit) && (limit_exit <= bb_end);
@@ -52,90 +46,77 @@ bool limit_check(uint64_t bb_start, uint64_t bb_end, uint64_t limit_exit, uint64
 /* http://stackoverflow.com/questions/29600668/what-meaning-if-any-does-the-mod-r-m-byte-carry-for-the-unconditional-jump-ins */
 /* conditional branch */
 cofi_ins cb_lookup[] = {
-	{X86_INS_JAE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_JA,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_JBE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_JB,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_JCXZ,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_JECXZ,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_JE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_JGE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {X86_INS_JG,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {X86_INS_JLE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_JL,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {X86_INS_JNE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {X86_INS_JNO,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {X86_INS_JNP,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {X86_INS_JNS,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {X86_INS_JO,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {X86_INS_JP,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {X86_INS_JRCXZ,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-  {X86_INS_JS,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_LOOP,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_LOOPE,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_LOOPNE,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_JNB,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_JNBE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_JBE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_JB,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_JCXZ,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_JECXZ,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_JZ,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_JNL,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+  {ZYDIS_MNEMONIC_JNLE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+  {ZYDIS_MNEMONIC_JLE,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_JL,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+  {ZYDIS_MNEMONIC_JNZ,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+  {ZYDIS_MNEMONIC_JNO,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+  {ZYDIS_MNEMONIC_JNP,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+  {ZYDIS_MNEMONIC_JNS,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+  {ZYDIS_MNEMONIC_JO,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+  {ZYDIS_MNEMONIC_JP,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+  {ZYDIS_MNEMONIC_JRCXZ,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
+  {ZYDIS_MNEMONIC_JS,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_LOOP,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_LOOPE,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_LOOPNE,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
 };
 
 /* unconditional direct branch */
 cofi_ins udb_lookup[] = {
-	{X86_INS_JMP,		IGN_MOD_RM,	0xe9},
-	{X86_INS_JMP,		IGN_MOD_RM, 0xeb},
-	{X86_INS_CALL,	IGN_MOD_RM,	0xe8},
+	{ZYDIS_MNEMONIC_JMP,		IGN_MOD_RM,	0xe9},
+	{ZYDIS_MNEMONIC_JMP,		IGN_MOD_RM, 0xeb},
+	{ZYDIS_MNEMONIC_CALL,	IGN_MOD_RM,	0xe8},
 };
 
 /* indirect branch */
 cofi_ins ib_lookup[] = {
-	{X86_INS_JMP,		MODRM_REG(4),	0xff},
-	{X86_INS_CALL,	MODRM_REG(2),	0xff},
+	{ZYDIS_MNEMONIC_JMP,		MODRM_REG(4),	0xff},
+	{ZYDIS_MNEMONIC_CALL,	MODRM_REG(2),	0xff},
 };
 
 /* near ret */
 cofi_ins nr_lookup[] = {
-	{X86_INS_RET,		IGN_MOD_RM,	0xc3},
-	{X86_INS_RET,		IGN_MOD_RM,	0xc2},
+	{ZYDIS_MNEMONIC_RET,		IGN_MOD_RM,	0xc3},
+	{ZYDIS_MNEMONIC_RET,		IGN_MOD_RM,	0xc2},
 };
 
 /* far transfers */
 cofi_ins ft_lookup[] = {
-	{X86_INS_INT3,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_INT,				IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_INT1,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_INTO,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_IRET,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_IRETD,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_IRETQ,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_JMP,				IGN_MOD_RM,		0xea},
-	{X86_INS_JMP,				MODRM_REG(5),	0xff},
-	{X86_INS_CALL,			IGN_MOD_RM,		0x9a},
-	{X86_INS_CALL,			MODRM_REG(3),	0xff},
-	{X86_INS_RET,				IGN_MOD_RM,		0xcb},
-	{X86_INS_RET,				IGN_MOD_RM,		0xca},
-	{X86_INS_SYSCALL,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_SYSENTER,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_SYSEXIT,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_SYSRET,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_VMLAUNCH,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_VMRESUME,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
-	{X86_INS_UD0, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
-	{X86_INS_UD2, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
-	{X86_INS_UD1, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_INT3,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_INT,				IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_INT1,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_INTO,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_IRET,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_IRETD,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_IRETQ,			IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_JMP,				IGN_MOD_RM,		0xea},
+	{ZYDIS_MNEMONIC_JMP,				MODRM_REG(5),	0xff},
+	{ZYDIS_MNEMONIC_CALL,			IGN_MOD_RM,		0x9a},
+	{ZYDIS_MNEMONIC_CALL,			MODRM_REG(3),	0xff},
+	{ZYDIS_MNEMONIC_RET,				IGN_MOD_RM,		0xcb},
+	{ZYDIS_MNEMONIC_RET,				IGN_MOD_RM,		0xca},
+	{ZYDIS_MNEMONIC_SYSCALL,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_SYSENTER,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_SYSEXIT,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_SYSRET,		IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_VMLAUNCH,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_VMRESUME,	IGN_MOD_RM,	IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_UD0, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_UD2, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
+	{ZYDIS_MNEMONIC_UD1, 			IGN_MOD_RM, IGN_OPODE_PREFIX},
 
 };
 
-uint16_t cmp_lookup[] = {
-	X86_INS_CMP,
-	X86_INS_CMPPD,
-	X86_INS_CMPPS,
-	X86_INS_CMPSB,
-	X86_INS_CMPSD,
-	X86_INS_CMPSQ,
-	X86_INS_CMPSS,
-	X86_INS_CMPSW,
-	X86_INS_CMPXCHG16B,
-	X86_INS_CMPXCHG,
-	X86_INS_CMPXCHG8B,
-};
-
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
 cofi_ins* lookup_tables[] = {
 	cb_lookup,
@@ -146,30 +127,14 @@ cofi_ins* lookup_tables[] = {
 };
 
 uint8_t lookup_table_sizes[] = {
-	22,
-	3,
-	2,
-	2,
-	19+3
+	ARRAY_SIZE(cb_lookup),
+	ARRAY_SIZE(udb_lookup),
+	ARRAY_SIZE(ib_lookup),
+	ARRAY_SIZE(nr_lookup),
+	ARRAY_SIZE(ft_lookup),
 };
 
-
-static cs_insn* disassembler_cs_malloc(disassembler_t* self, disassembler_mode_t mode){
-	switch(mode){
-		case mode_16:
-			return cs_malloc(self->handle_16);
-		case mode_32:
-			return cs_malloc(self->handle_32);
-		case mode_64:
-			return cs_malloc(self->handle_64);
-		default:
-			assert(false);
-	}
-	return NULL;
-}
-
-
-static bool disassembler_iter(disassembler_t* self, uint64_t* address, cs_insn *insn, uint64_t* failed_page, disassembler_mode_t mode){
+static bool disassembler_iter(disassembler_t* self, ZydisDecoderContext* ctx, uint64_t* address, ZydisDisassembledInstruction *insn, uint64_t* failed_page, ZydisDecoder* current_handle){
 
 	*failed_page = 0xFFFFFFFFFFFFFFFFULL;
 
@@ -178,26 +143,7 @@ static bool disassembler_iter(disassembler_t* self, uint64_t* address, cs_insn *
 
 	uint8_t* code = (uint8_t*)(self->page_cache_fetch_fptr)(self->page_cache_fetch_opaque, *address, &success);
 
-
 	uint8_t* code_ptr = 0;
-
-
-	//disassembler_mode_t mode = mode_16;
-	csh* current_handle = NULL;
-
-	switch(mode){
-		case mode_16:
-			current_handle = &self->handle_16;
-			break;
-		case mode_32:
-			current_handle = &self->handle_32;
-			break;
-		case mode_64:
-			current_handle = &self->handle_64;
-			break;
-		default:
-			assert(false);
-	}
 
 	if (code == (void*)UNMAPPED_PAGE || success == false){
 		*failed_page = *address;// & 0xFFFFFFFFFFFFF000ULL;
@@ -216,64 +162,53 @@ static bool disassembler_iter(disassembler_t* self, uint64_t* address, cs_insn *
 		if(success == true){
 			memcpy((void*)(self->disassemble_cache+16), (void*)code, 16);
 			//code_size = 16;
-			return cs_disasm_iter(*current_handle, (const uint8_t**) &code_ptr, &code_size, address, insn);
+			*insn = (ZydisDisassembledInstruction)
+			{
+				.runtime_address = *address
+			};
+			return ZydisDecoderDecodeInstruction(current_handle, ctx, code_ptr, code_size, &insn->info) == ZYAN_STATUS_SUCCESS;
 		}
 		else{
 			code_size = (0xfff-(*address&0xfff));
+			*insn = (ZydisDisassembledInstruction)
+			{
+				.runtime_address = *address
+			};
 
-			if(!cs_disasm_iter(*current_handle, (const uint8_t**) &code_ptr, &code_size, address, insn)){
+			if(ZydisDecoderDecodeInstruction(current_handle, ctx, code_ptr, code_size, &insn->info) != ZYAN_STATUS_SUCCESS){
 				*failed_page = (*address+0x1000) & 0xFFFFFFFFFFFFF000ULL;
 
 				return false;
 			}
 			return true;
-			//return cs_disasm_iter(self->handle, (const uint8_t**) &code_ptr, &code_size, address, insn);
 		}
 	}
 	else {
 		//printf("=> C\n");
 		code_ptr = code + (*address&0xFFF);
+		*insn = (ZydisDisassembledInstruction)
+		{
+			.runtime_address = *address
+		};
 
 		// DbgPrint("Disassemble...(%lx %x)\n", code_ptr, *code_ptr);
-		return cs_disasm_iter(*current_handle, (const uint8_t**) &code_ptr, &code_size, address, insn);
+		return ZydisDecoderDecodeInstruction(current_handle, ctx, code_ptr, code_size, &insn->info) == ZYAN_STATUS_SUCCESS;
 	}
 }
 
 
 /* ===== kAFL disassembler engine ===== */
 
-static inline uint64_t fast_strtoull(const char *hexstring){
-	uint64_t result = 0;
-	uint8_t i = 0;
-	if (hexstring[1] == 'x' || hexstring[1] == 'X')
-		i = 2;
-	for (; hexstring[i]; i++)
-		result = (result << 4) + (9 * (hexstring[i] >> 6) + (hexstring[i] & 017));
-	return result;
-}
-
-static inline uint64_t hex_to_bin(char* str){
-	//return (uint64_t)strtoull(str, NULL, 16);
-	return fast_strtoull(str);
-}
-
-static cofi_type opcode_analyzer(disassembler_t* self, cs_insn *ins){
+static cofi_type opcode_analyzer(ZydisDisassembledInstruction *insn){
 	uint8_t i, j;
-	cs_x86 details = ins->detail->x86;
-
-	//		printf("%lx (%d)\t%s\t%s\t\t\n", ins->address, i, ins->mnemonic, ins->op_str);
+	//		printf("%lx (%d)\t%s\t%s\t\t\n", insn->runtime_address, i, insn->mnemonic, insn->text);
 	for (i = 0; i < LOOKUP_TABLES; i++){
 		for (j = 0; j < lookup_table_sizes[i]; j++){
-			if (ins->id == lookup_tables[i][j].opcode){
-
-				/* check MOD R/M */
-				if (lookup_tables[i][j].modrm != IGN_MOD_RM && lookup_tables[i][j].modrm != (details.modrm & MODRM_AND))
-						continue;
-
-				/* check opcode prefix byte */
-				if (lookup_tables[i][j].opcode_prefix != IGN_OPODE_PREFIX && lookup_tables[i][j].opcode_prefix != details.opcode[0])
-						continue;
-				return i;
+			if (insn->info.mnemonic == lookup_tables[i][j].opcode){
+				/* check MOD R/M and opcode prefix byte */
+				uint8_t reg_bits = insn->info.raw.modrm.reg << 3;
+				if ((lookup_tables[i][j].modrm == IGN_MOD_RM || lookup_tables[i][j].modrm == reg_bits) && (lookup_tables[i][j].opcode_prefix == IGN_OPODE_PREFIX || lookup_tables[i][j].opcode_prefix == insn->info.opcode))
+					return i;
 			}
 		}
 	}
@@ -283,18 +218,37 @@ static cofi_type opcode_analyzer(disassembler_t* self, cs_insn *ins){
 static node_id_t disassemble_bb(disassembler_t* self, uint64_t base_address, uint64_t limit, uint64_t* failed_page, disassembler_mode_t mode){
 	// printf("DISASM BB: 0x%llx\n", base_address);
 	// printf("x64 handler: %zx\n", self->handle_64);
-	cs_insn *insn = disassembler_cs_malloc(self, mode);
+	ZydisDecoder* current_handle = NULL;
+
+	switch(mode){
+		case mode_16:
+			current_handle = &self->decoder_16;
+			break;
+		case mode_32:
+			current_handle = &self->decoder_32;
+			break;
+		case mode_64:
+			current_handle = &self->decoder_64;
+			break;
+		default:
+			assert(false);
+	}
+
+	ZydisDisassembledInstruction insn;
+	ZydisDecoderContext ctx;
+	ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
 	uint64_t address = base_address;
 	node_id_t res_nid = NODE_PAGE_FAULT;
-	while(disassembler_iter(self, &address, insn, failed_page, mode)){
-		// printf("insn id: %u; address=0x%p\n", insn->id, (void *)insn->address);
-		// printf("DISASM %s %s\n",insn->mnemonic, insn->op_str);
-		if (insn->address > limit){
-			res_nid = disassembler_cfg_add_node(&self->cfg, base_address, insn->address, OUT_OF_BOUNDS);
+	while(disassembler_iter(self, &ctx, &address, &insn, failed_page, current_handle)){
+		address += insn.info.length;
+		// printf("insn id: %u; address=0x%p\n", insn.info.mnemonic, (void *)insn.runtime_address);
+		// printf("DISASM %s %s\n",insn.info.mnemonic, insn.text);
+		if (insn.runtime_address > limit){
+			res_nid = disassembler_cfg_add_node(&self->cfg, base_address, insn.runtime_address, OUT_OF_BOUNDS);
 			break;
 		}
 
-		node_id_t nid = disassembler_cfg_get_node_id(&self->cfg, insn->address);
+		node_id_t nid = disassembler_cfg_get_node_id(&self->cfg, insn.runtime_address);
 
 		if( nid != NODE_NOT_DEFINED) {
 			//printf("DISASM FOUND PREFIX\n");
@@ -303,19 +257,23 @@ static node_id_t disassemble_bb(disassembler_t* self, uint64_t base_address, uin
 			break;
 		}
 
-		cofi_type type = opcode_analyzer(self, insn);
+		cofi_type type = opcode_analyzer(&insn);
 
 		if( type != NO_COFI_TYPE ){
 			//printf("DISASM FOUND COFI\n");
-			res_nid = disassembler_cfg_add_node(&self->cfg, base_address, insn->address, type);
+			res_nid = disassembler_cfg_add_node(&self->cfg, base_address, insn.runtime_address, type);
 
 			if (type == COFI_TYPE_CONDITIONAL_BRANCH){
-				uint64_t target = hex_to_bin(insn->op_str);
-				uint64_t fallthrough = insn->address + insn->size;
+				ZydisDecoderDecodeOperands(current_handle, &ctx, &insn.info, operands, insn.info.operand_count);
+				uint64_t target = 0;
+				ZydisCalcAbsoluteAddress(&insn.info, &operands[0], insn.runtime_address, &target);
+				uint64_t fallthrough = insn.runtime_address + insn.info.length;
 				disassembler_cfg_add_br1_addr(&self->cfg, res_nid, target);
 				disassembler_cfg_add_br2_addr(&self->cfg, res_nid, fallthrough);
 			} else if (type == COFI_TYPE_UNCONDITIONAL_DIRECT_BRANCH ){
-				uint64_t target = hex_to_bin(insn->op_str);
+				ZydisDecoderDecodeOperands(current_handle, &ctx, &insn.info, operands, insn.info.operand_count);
+				uint64_t target = 0;
+				ZydisCalcAbsoluteAddress(&insn.info, &operands[0], insn.runtime_address, &target);
 				disassembler_cfg_add_br1_addr(&self->cfg, res_nid, target);
 			} else if (type == COFI_TYPE_INDIRECT_BRANCH || type == COFI_TYPE_NEAR_RET || type == COFI_TYPE_FAR_TRANSFERS) {
 				//NOTHING TO BE DONE HERE
@@ -328,7 +286,6 @@ static node_id_t disassemble_bb(disassembler_t* self, uint64_t base_address, uin
 	if(res_nid != NODE_PAGE_FAULT && self->basic_block_callback){
 		self->basic_block_callback(self->basic_block_callback_opaque, mode, self->cfg.base_addr[res_nid], self->cfg.cofi_addr[res_nid]);
 	}
-	cs_free(insn, 1);
 	return res_nid;
 }
 
@@ -400,18 +357,9 @@ disassembler_t* init_disassembler(uint64_t filter[4][2], void* (*page_cache_fetc
 
 	memset(self->disassemble_cache, 0x0, 16);
 
-	if (cs_open(CS_ARCH_X86, CS_MODE_16, &self->handle_16) != CS_ERR_OK)
-		assert(false);
-
-	if (cs_open(CS_ARCH_X86, CS_MODE_32, &self->handle_32) != CS_ERR_OK)
-		assert(false);
-
-	if (cs_open(CS_ARCH_X86, CS_MODE_64, &self->handle_64) != CS_ERR_OK)
-		assert(false);
-
-	cs_option(self->handle_16, CS_OPT_DETAIL, CS_OPT_ON);
-	cs_option(self->handle_32, CS_OPT_DETAIL, CS_OPT_ON);
-	cs_option(self->handle_64, CS_OPT_DETAIL, CS_OPT_ON);
+	ZydisDecoderInit(&self->decoder_16, ZYDIS_MACHINE_MODE_LONG_COMPAT_16, ZYDIS_STACK_WIDTH_16);
+	ZydisDecoderInit(&self->decoder_32, ZYDIS_MACHINE_MODE_LONG_COMPAT_32, ZYDIS_STACK_WIDTH_32);
+	ZydisDecoderInit(&self->decoder_64, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
 
 	self->trace_mode = false;
 
@@ -434,9 +382,6 @@ void destroy_disassembler(disassembler_t* self){
 
 	trace_cache_destroy(self->trace_cache);
 	disassembler_cfg_destroy(&self->cfg);
-	cs_close(&self->handle_16);
-	cs_close(&self->handle_32);
-	cs_close(&self->handle_64);
 
 	free(self);
 }
@@ -705,4 +650,4 @@ __attribute__((hot)) disas_result_t trace_disassembler(disassembler_t* self, uin
 		}
 	}
 	return disas_success;
- }
+}
