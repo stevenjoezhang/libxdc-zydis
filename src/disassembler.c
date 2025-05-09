@@ -334,8 +334,9 @@ void reset_trace_cache(disassembler_t* self){
 }
 
 void destroy_disassembler(disassembler_t* self){
-    if ( !self )
-        return;
+	if ( !self ) {
+		return;
+	}
 
 	trace_cache_destroy(self->trace_cache);
 	disassembler_cfg_destroy(&self->cfg);
