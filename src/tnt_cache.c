@@ -239,7 +239,7 @@ int count_tnt(tnt_cache_t* self){
 #endif
 }
 
-tnt_cache_t* tnt_cache_init(void){
+tnt_cache_t* tnt_cache_init(void* (*tnt_cache_malloc_fptr)(void)){
 	tnt_cache_t* self = malloc(sizeof(tnt_cache_t));
 #ifdef NON_BRANCH_LESS_CODE
 	self->tnt_memory = (uint8_t*)mmap(NULL, BUF_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
@@ -250,7 +250,12 @@ tnt_cache_t* tnt_cache_init(void){
 
 #ifdef BRANCH_LESS_CODE
 	// self->bl_tnt_memory = (uint32_t*)mmap(NULL, BUF_SIZE/8, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
-	self->bl_tnt_memory = (uint32_t*)malloc(BUF_SIZE / 8);
+	if (tnt_cache_malloc_fptr){
+		self->bl_tnt_memory = (uint32_t*)tnt_cache_malloc_fptr();
+	}
+	else {
+		self->bl_tnt_memory = (uint32_t*)malloc(BUF_SIZE / 8);
+	}
 	self->bl_max = 0;
 	self->bl_pos = 0;
 	self->bl_tnt = 0;
@@ -283,7 +288,7 @@ void tnt_cache_destroy(tnt_cache_t* self){
 
 #ifdef BRANCH_LESS_CODE
 	// munmap(self->bl_tnt_memory, BUF_SIZE/8);
-	free(self->bl_tnt_memory);
+	// free(self->bl_tnt_memory);
 	self->bl_max = 0;
 	self->bl_pos = 0;
 	self->bl_tnt = 0;

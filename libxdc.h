@@ -53,6 +53,7 @@ typedef struct libxdc_config_s {
 	void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*);
 	void* page_cache_fetch_opaque;
 	uint64_t (*kaslr_address_remapping)(uint64_t);
+	void* (*tnt_cache_malloc_fptr)(void);
 	void* bitmap_ptr;
 	size_t bitmap_size;
 	// first size_t data used for storing signal count

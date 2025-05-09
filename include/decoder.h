@@ -39,7 +39,7 @@ SOFTWARE.
 
 //#define SAMPLE_DECODED_DETAILED 1
 
-decoder_t* pt_decoder_init(bool align_psb);
+decoder_t* pt_decoder_init(bool align_psb, void* (*tnt_cache_malloc_fptr)(void));
 
  __attribute__((hot)) decoder_result_t decode_buffer(decoder_t* self, uint8_t* map, size_t len);
 void pt_decoder_destroy(decoder_t* self);

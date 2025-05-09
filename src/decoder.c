@@ -217,14 +217,14 @@ static void flush_log(decoder_t* self){
 }
 #endif
 
-decoder_t* pt_decoder_init(bool align_psb){
+decoder_t* pt_decoder_init(bool align_psb, void* (*tnt_cache_malloc_fptr)(void)){
 	decoder_t* res = calloc(1, sizeof(decoder_t));
 
 #ifdef DECODER_LOG
 	flush_log(res);
 #endif
 
-	res->tnt_cache_state = tnt_cache_init();
+	res->tnt_cache_state = tnt_cache_init(tnt_cache_malloc_fptr);
 		/* ToDo: Free! */
 	res->decoder_state = decoder_statemachine_new();
 	res->decoder_state_result = malloc(sizeof(should_disasm_t));

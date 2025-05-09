@@ -61,7 +61,7 @@ typedef struct tnt_cache_s{
 
 uint64_t get_tnt_hash(tnt_cache_t* self);
 
-tnt_cache_t* tnt_cache_init(void);
+tnt_cache_t* tnt_cache_init(void* (*tnt_cache_malloc_fptr)(void));
 void tnt_cache_destroy(tnt_cache_t* self);
 void tnt_cache_flush(tnt_cache_t* self);
 
