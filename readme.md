@@ -1,4 +1,4 @@
-# libxdc
+# libxdc-zydis
 
 <p>
 <img align="right" width="200"  src="logo.png">
@@ -6,20 +6,42 @@
 
 libxdc (e**X**tremely fast **D**e**C**oder) aims to be the best Intel-PT decoding library for fuzzing purposes. It was designed to power various of our binary-only fuzzers such as [kAFL](https://github.com/RUB-SysSec/kAFL), [Redqueen](https://github.com/RUB-SysSec/redqueen), [Grimoire](https://github.com/RUB-SysSec/grimoire) and Nyx. We heavily optimized the library towards decoding similar traces over and over again. In contrast to other options with similar goals, we decode the full information to yield precise coverage information. Thanks to the magic of computed gotos, struct of arrays, heavy caching, branchless code and tons of unreasonable micro optimizations, it is by far the fastest Intel-PT decoder we found.
 
+## Install
+
+libxdc-zydis depends on [Zydis](https://github.com/zyantific/zydis) v4. To install it:
+
+```bash
+git clone https://github.com/zyantific/zydis.git --recursive
+cd zydis
+cmake -B build
+cmake --build build -j4
+sudo make install
+```
+
+If Zydis v4 is installed, you can install libxdc:
+
+```bash
+git clone https://github.com/stevenjoezhang/libxdc-zydis.git
+cd libxdc-zydis
+make install
+```
+
+This builds both a .so and a static .a version of the library. For performance reasons we recommend to use the static version IF you are able to use link time optimizations during the compilation of your tool.
+
 ## Usage
 
 Using libxdc is rather simple:
 
 ```c
-page_cache_t* page_cache =  page_cache_new(page_cache_file);
+page_cache_t* page_cache = page_cache_new(page_cache_file);
 void* bitmap = malloc(0x10000);
-libxdc_t* decoder = libxdc_init(filter, &page_cache_fetch, page_cache, bitmap, 0x10000);
+libxdc_t* decoder = libxdc_init(config);
 ret = libxdc_decode(decoder, trace, trace_size);
 ```
 
-To create a a decoder you use `libxdc_t* libxdc_init(uint64_t filter[4][2], void* (*page_cache_fetch_fptr)(void*, uint64_t, bool*), void* page_cache_fetch_opaque, void* bitmap_ptr, size_t bitmap_size)`. This function takes a set of 4 `filter` ranges as you configured them during tracing. To disassemble the target, a callback `page_cache_fetch_fptr` has to be provided that allows libxdc to request memory. To help with this task, a opaque `void*` can be passed to `libxdc_init` that will be passed to this callback. In our fuzzers we use this callback to access the targets memory. This can also be used to deal with dynamically generated code such as manually loaded libraries, swapped out pages  or unpackers. If the callback requests a page  that is not currently available in our memory snapshot, we place a hardware breakpoint on the address that was requested for disassembly. Then  we perform a second execution without tracing, dumping the page to the cache when the instruction is executed. 
+To create a decoder you use `libxdc_t* libxdc_init(libxdc_config_t* config)`. This `config` takes a set of 4 `filter` ranges as you configured them during tracing. To disassemble the target, a callback `page_cache_fetch_fptr` has to be provided in `config` that allows libxdc to request memory. To help with this task, a opaque `void*` can be passed to `libxdc_init` that will be passed to this callback. In our fuzzers we use this callback to access the targets memory. This can also be used to deal with dynamically generated code such as manually loaded libraries, swapped out pages or unpackers. If the callback requests a page that is not currently available in our memory snapshot, we place a hardware breakpoint on the address that was requested for disassembly. Then we perform a second execution without tracing, dumping the page to the cache when the instruction is executed. 
 
-Lastly, a pointer to the bitmap and it's size needs to be provided. After we obtained a decoder object, we can use `libxdc_decode` to decode a trace. The bitmap will be filled according to the trace by the decoder. Between individual test cases, the callee is responsible for resetting the bitmap to 0 after each test case.
+Lastly, a pointer to the bitmap and it's size needs to be provided in `config`. After we obtained a decoder object, we can use `libxdc_decode` to decode a trace. The bitmap will be filled according to the trace by the decoder. Between individual test cases, the callee is responsible for resetting the bitmap to 0 after each test case.
 
 To obtain more information on the decoding process you can register additional callbacks:
 
@@ -71,28 +93,6 @@ Together with the author of Honeybee, we investigated the reasons for this surpr
 The results of our experiments are presented below. It should be noted that we only evaluate on the examples provided by Honyebee. This is due to the fact that the pre-processing stage of Honeybee is limited to analyzing a single ELF executable with a single executable section, whereas many of our experiments use memory dumps with libraries and kernel modules mapped into the process address space.
 
 ![](https://github.com/nyx-fuzz/libxdc_experiments/raw/master/experiments/eval_honeybee.png)
-
-## Install
-
-libxdc depends on capstone v4. Unfortunately, many distributions don't contain this version in their package management. To install libcapstone v4: 
-
-```bash
-git clone https://github.com/aquynh/capstone.git
-cd capstone
-git checkout v4
-make 
-sudo make install
-```
-
-If libcapstone v4 is installed, you can install libxdc:
-
-```bash
-git clone https://github.com/nyx-fuzz/libxdc.git
-cd libxdc
-make install
-```
-
-This builds both a .so and a static .a version of the library. For performance reasons we recommend to use the static version IF you are able to use link time optimizations during the compilation of your tool. 
 
 ## Bug Reports and Contributions
 

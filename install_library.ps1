@@ -1,1 +1,0 @@
-Copy-Item libxdc.lib C:\Users\Administrator\WinkFuzz\fuzzing
