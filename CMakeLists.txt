@@ -59,6 +59,7 @@ install(TARGETS xdc
 		PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # target_compile_definitions(xdc PRIVATE DEBUG_TRACES)
+target_compile_definitions(xdc PRIVATE ZYDIS_STATIC_BUILD)
 
 # Test libxdc
 if (!WINDOWS)
