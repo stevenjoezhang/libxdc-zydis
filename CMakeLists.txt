@@ -64,5 +64,5 @@ target_compile_definitions(xdc PRIVATE ZYDIS_STATIC_BUILD)
 # Test libxdc
 if (!WINDOWS)
 	add_executable(ipt_test test/ipt_test.cc)
-	target_link_libraries(ipt_test PRIVATE xdc /usr/local/lib64/libcapstone.a)
+	target_link_libraries(ipt_test PRIVATE xdc /usr/local/lib/libZydis.a)
 endif()
